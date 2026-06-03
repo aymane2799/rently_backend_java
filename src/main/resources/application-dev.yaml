@@ -1,0 +1,24 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      # Log all SQL queries to console in dev — disable in prod
+      show-sql: true
+
+      properties:
+        jakarta.persistence.schema-generation.scripts.action: create
+        jakarta.persistence.schema-generation.scripts.create-target: target/generated-schema.sql
+        hibernate:
+          format_sql: true
+
+      # 'validate' means Hibernate checks that your entity classes match the
+      # database schema at startup. It does NOT create or alter tables.
+      ddl-auto: validate

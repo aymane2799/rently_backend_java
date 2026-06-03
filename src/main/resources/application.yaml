@@ -1,3 +1,30 @@
 spring:
   application:
-    name: rently
+    name: Rently
+
+  # JPA / Hibernate
+  jpa:
+    hibernate:
+      # 'validate' means Hibernate checks that your entity classes match the
+      # database schema at startup. It does NOT create or alter tables.
+      # Flyway manages all schema changes; Hibernate only validates.
+      ddl-auto: validate
+
+    # Disable OSIV — prevents lazy-loading issues in controllers
+    open-in-view: false
+
+  # Flyway — database migration tool
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false # Fresh database; do not baseline
+
+# Spring Boot Actuator — which endpoints to expose
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
