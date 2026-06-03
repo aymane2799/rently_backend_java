@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8090
 
 spring:
   datasource:
@@ -21,4 +21,7 @@ spring:
 
       # 'validate' means Hibernate checks that your entity classes match the
       # database schema at startup. It does NOT create or alter tables.
-      ddl-auto: validate
+      ddl-auto: update
+  flyway:
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}

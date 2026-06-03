@@ -8,14 +8,14 @@ spring:
       # 'validate' means Hibernate checks that your entity classes match the
       # database schema at startup. It does NOT create or alter tables.
       # Flyway manages all schema changes; Hibernate only validates.
-      ddl-auto: validate
+      ddl-auto: update
 
     # Disable OSIV — prevents lazy-loading issues in controllers
     open-in-view: false
 
   # Flyway — database migration tool
   flyway:
-    enabled: true
+    enabled: false
     locations: classpath:db/migration
     baseline-on-migrate: false # Fresh database; do not baseline
 
