@@ -49,7 +49,7 @@ public class Vehicle extends Auditable {
     @Column(columnDefinition = "SMALLINT")
     private Short doors;
 
-    @Column(columnDefinition = "TEXT", nullable = true)
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     @Enumerated(EnumType.STRING)

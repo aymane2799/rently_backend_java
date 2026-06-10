@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,66 +23,42 @@ public class FeatureServiceImplementation implements FeatureService {
 
     @Override
     public FeatureResponse get(String id) {
-        final Optional<Feature> feature = Optional.of(repository.findById(id))
-                .orElseThrow(() -> new EntityNotFoundException(("Feature with id " + id + " not found!")));
-
-        return featureMapper.toResponse(feature.get());
+        final Feature feature = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Feature with id " + id + " not found!"));
+        return featureMapper.toResponse(feature);
     }
 
     @Override
     public FeatureResponse create(CreateFeatureRequest request) {
-        final Optional<Feature> featureExists = repository.findByName(request.getName());
-
-        if (featureExists.isPresent()) {
+        if (repository.findByName(request.getName()).isPresent()) {
             throw new EntityExistsException("Feature with name " + request.getName() + " already exists!");
         }
 
         final Feature entity = featureMapper.toEntity(request, null);
-        final Feature createdBrand = repository.save(entity);
-
-        return featureMapper.toResponse(createdBrand);
+        return featureMapper.toResponse(repository.save(entity));
     }
-
 
     @Override
     public void update(String id, UpdateFeatureRequest request) {
-        final Optional<Feature> featureExists = repository.findById(id);
+        final Feature feature = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Feature with id " + id + " not found!"));
 
-        if (featureExists.isEmpty()) {
-            throw new EntityExistsException("Feature not found!");
+        if (request.getName() != null) {
+            repository.findByName(request.getName()).ifPresent(existing -> {
+                if (!existing.getId().equals(feature.getId())) {
+                    throw new EntityExistsException("Feature with name " + request.getName() + " already exists!");
+                }
+            });
         }
 
-        final Feature feature = featureExists.get();
-
-//        if (feature.getName() != null) {
-//            final Optional<Feature> existingBrand = repository.findByName(request.getName());
-//
-//            if (existingBrand.isPresent() && !existingBrand.get().getId().equals(feature.getId())) {
-//                throw new EntityExistsException("Feature with name " + request.getName() + " already exists!");
-//            }
-//
-//            feature.setName(request.getName());
-//        }
-//
-//        if (feature.getIcon() != null) {
-//            feature.setIcon(request.getIcon());
-//        }
-//
-//        if (feature.getDescription() != null) {
-//            feature.setDescription(request.getDescription());
-//        }
-
+        featureMapper.patchEntity(feature, request, null);
         repository.save(feature);
     }
 
     @Override
     public void delete(String id) {
-        final Optional<Feature> featureExists = repository.findById(id);
-
-        if (featureExists.isEmpty()) {
-            throw new EntityNotFoundException("Feature not found!");
-        }
-
-        repository.delete(featureExists.get());
+        final Feature feature = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Feature with id " + id + " not found!"));
+        repository.delete(feature);
     }
 }

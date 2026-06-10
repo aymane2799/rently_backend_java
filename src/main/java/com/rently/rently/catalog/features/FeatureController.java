@@ -11,7 +11,7 @@ import java.util.List;
 @RequestMapping("/api/v1/features")
 @RequiredArgsConstructor
 public class FeatureController {
-    final FeatureServiceImplementation service;
+    final FeatureService service;
 
     @GetMapping
     public List<FeatureResponse> getAll() {

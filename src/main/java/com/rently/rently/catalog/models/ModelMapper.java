@@ -1,6 +1,5 @@
 package com.rently.rently.catalog.models;
 
-import com.rently.rently.catalog.brands.Brand;
 import com.rently.rently.catalog.brands.BrandMapper;
 import com.rently.rently.catalog.brands.BrandResponse;
 import com.rently.rently.catalog.models.hydration.ModelHydrationContext;
@@ -30,18 +29,13 @@ public class ModelMapper implements
     }
 
     @Override
-    public Model patchEntity(Model entity, UpdateModelRequest request, ModelHydrationContext ctx) {
-        Model model = new Model();
-
+    public void patchEntity(Model entity, UpdateModelRequest request, ModelHydrationContext ctx) {
         if (request.getName() != null) {
-            model.setName(request.getName());
+            entity.setName(request.getName());
         }
-
         if (ctx.getBrand() != null) {
-            model.setBrand(ctx.getBrand());
+            entity.setBrand(ctx.getBrand());
         }
-
-        return model;
     }
 
     @Override

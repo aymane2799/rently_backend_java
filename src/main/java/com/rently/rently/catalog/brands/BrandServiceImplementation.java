@@ -4,10 +4,8 @@ import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,57 +23,42 @@ public class BrandServiceImplementation implements BrandService {
 
     @Override
     public BrandResponse get(String id) {
-        final Optional<Brand> brand = Optional.of(repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Brand with id " + id + " not found!")));
-
-        return brandMapper.toResponse(brand.get());
+        final Brand brand = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Brand with id " + id + " not found!"));
+        return brandMapper.toResponse(brand);
     }
 
     @Override
     public BrandResponse create(CreateBrandRequest request) {
-        final Optional<Brand> brandExists = repository.findByName(request.getName());
-
-        if (brandExists.isPresent()) {
+        if (repository.findByName(request.getName()).isPresent()) {
             throw new EntityExistsException("Brand with name " + request.getName() + " already exists!");
         }
 
-        final Brand entity = brandMapper.toEntity(request,null );
-        final Brand createdBrand = repository.save(entity);
-
-        return brandMapper.toResponse(createdBrand);
+        final Brand entity = brandMapper.toEntity(request, null);
+        return brandMapper.toResponse(repository.save(entity));
     }
 
     @Override
-    public void update(@PathVariable String id, UpdateBrandRequest request) {
-        final Optional<Brand> brand = repository.findById(id);
-
-        if (brand.isEmpty()) {
-            throw new EntityNotFoundException("Car Brand not found");
-        }
-
-        final Brand brandEntity = brand.get();
+    public void update(String id, UpdateBrandRequest request) {
+        final Brand brand = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Brand with id " + id + " not found!"));
 
         if (request.getName() != null) {
-            final Optional<Brand> brandWithSameName = repository.findByName(request.getName());
-
-            if(brandWithSameName.isPresent() && !brandWithSameName.get().getId().equals(brandEntity.getId())) {
-                throw new EntityExistsException("Car Brand with name " + request.getName() + " already exists!");
-            }
-
-            brandEntity.setName(request.getName());
+            repository.findByName(request.getName()).ifPresent(existing -> {
+                if (!existing.getId().equals(brand.getId())) {
+                    throw new EntityExistsException("Brand with name " + request.getName() + " already exists!");
+                }
+            });
         }
-        repository.save(brandEntity);
+
+        brandMapper.patchEntity(brand, request, null);
+        repository.save(brand);
     }
 
     @Override
     public void delete(String id) {
-        final Optional<Brand> brand = repository.findById(id);
-
-        if (brand.isEmpty()) {
-            throw new EntityNotFoundException("Car Brand not found");
-        }
-
-        repository.deleteById(brand.get().getId());
+        final Brand brand = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Brand with id " + id + " not found!"));
+        repository.deleteById(brand.getId());
     }
-
 }

@@ -12,7 +12,7 @@ import java.util.List;
 @RequestMapping("/api/v1/car-models")
 @RequiredArgsConstructor
 public class ModelController {
-    private final ModelServiceImplementation service;
+    private final ModelService service;
 
     @GetMapping
     public List<ModelResponse> getAll() {

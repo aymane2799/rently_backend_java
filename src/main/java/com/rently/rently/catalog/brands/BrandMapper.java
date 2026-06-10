@@ -19,14 +19,10 @@ public class BrandMapper
     }
 
     @Override
-    public Brand patchEntity(Brand entity, UpdateBrandRequest request, Object ctx) {
-        Brand brand = new Brand();
-
+    public void patchEntity(Brand entity, UpdateBrandRequest request, Object ctx) {
         if (request.getName() != null) {
-            brand.setName(request.getName());
+            entity.setName(request.getName());
         }
-
-        return brand;
     }
 
     @Override

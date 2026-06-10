@@ -11,7 +11,7 @@ import java.util.List;
 @RequestMapping("/api/v1/car-brands")
 @RequiredArgsConstructor
 public class BrandController {
-    private final BrandServiceImplementation service;
+    private final BrandService service;
 
     @GetMapping
     public List<BrandResponse> getAll() {
