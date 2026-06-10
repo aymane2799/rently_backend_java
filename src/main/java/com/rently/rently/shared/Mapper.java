@@ -1,8 +1,8 @@
 package com.rently.rently.shared;
 
-import com.rently.rently.catalog.entities.CarModel;
 
-public interface Mapper<Entity , Request, Response> {
-    public Entity toEntity(final Request request);
+public interface Mapper<Entity, Response, CreateRequest, UpdateRequest> {
+    public Entity toEntity(final CreateRequest request);
+    void patchEntity(Entity entity, UpdateRequest request);
     public Response toResponse(final Entity entity);
 }

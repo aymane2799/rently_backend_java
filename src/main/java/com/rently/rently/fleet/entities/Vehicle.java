@@ -1,7 +1,7 @@
 package com.rently.rently.fleet.entities;
 
-import com.rently.rently.catalog.entities.CarModel;
-import com.rently.rently.catalog.entities.Feature;
+import com.rently.rently.catalog.features.Feature;
+import com.rently.rently.catalog.models.Model;
 import com.rently.rently.fleet.enums.FuelType;
 import com.rently.rently.fleet.enums.Transmission;
 import com.rently.rently.fleet.enums.VehicleStatus;
@@ -71,7 +71,7 @@ public class Vehicle extends Auditable {
     //  Relationships
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "model_id", nullable = false)
-    private CarModel model;
+    private Model model;
 
     @ManyToMany()
     @JoinTable(
