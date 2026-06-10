@@ -7,7 +7,9 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class CarBrandResponse {
+public class FeatureResponse {
     private String id;
     private String name;
+    private String icon;
+    private String description;
 }

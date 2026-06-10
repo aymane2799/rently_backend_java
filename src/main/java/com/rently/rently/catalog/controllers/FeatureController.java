@@ -1,10 +1,9 @@
 package com.rently.rently.catalog.controllers;
 
-
-import com.rently.rently.catalog.reponses.CarModelResponse;
-import com.rently.rently.catalog.requests.model.CreateCarModelRequest;
-import com.rently.rently.catalog.requests.model.UpdateCarModelRequest;
-import com.rently.rently.catalog.services_implementation.CarModelServiceImplementation;
+import com.rently.rently.catalog.reponses.FeatureResponse;
+import com.rently.rently.catalog.requests.feature.CreateFeatureRequest;
+import com.rently.rently.catalog.requests.feature.UpdateFeatureRequest;
+import com.rently.rently.catalog.services_implementation.FeatureServiceImplementation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,30 +12,30 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/car-models")
+@RequestMapping("/api/v1/features")
 @RequiredArgsConstructor
-public class CarModelController {
-    private final CarModelServiceImplementation service;
+public class FeatureController {
+    final FeatureServiceImplementation service;
 
     @GetMapping
-    public List<CarModelResponse> getAll() {
+    public List<FeatureResponse> getAll() {
         return service.getAll();
     }
 
     @GetMapping("{id}")
-    public CarModelResponse get(@PathVariable String id) {
+    public FeatureResponse get(@PathVariable String id) {
         return service.get(id);
     }
 
     @PostMapping()
     @ResponseStatus(HttpStatus.CREATED)
-    public CarModelResponse create(@RequestBody @Valid CreateCarModelRequest request) {
+    public FeatureResponse create(@RequestBody @Valid CreateFeatureRequest request) {
         return service.create(request);
     }
 
     @PatchMapping("{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void update(@PathVariable String id, @RequestBody @Valid UpdateCarModelRequest request) {
+    public void update(@PathVariable String id, @RequestBody @Valid UpdateFeatureRequest request) {
         service.update(id, request);
     }
 

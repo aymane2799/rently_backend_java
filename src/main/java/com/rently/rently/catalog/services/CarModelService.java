@@ -1,11 +1,9 @@
 package com.rently.rently.catalog.services;
 
 import com.rently.rently.catalog.reponses.CarModelResponse;
-import com.rently.rently.catalog.requests.CarModelRequest;
-import com.rently.rently.shared.BasicService;
+import com.rently.rently.catalog.requests.model.CreateCarModelRequest;
+import com.rently.rently.catalog.requests.model.UpdateCarModelRequest;
+import com.rently.rently.shared.CRUDService;
 
-import java.util.List;
-
-public interface CarModelService extends BasicService<CarModelRequest, CarModelResponse> {
-
+public interface CarModelService extends CRUDService<CreateCarModelRequest, UpdateCarModelRequest, CarModelResponse, String> {
 }

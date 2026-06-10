@@ -4,19 +4,21 @@ import com.rently.rently.catalog.entities.CarBrand;
 import com.rently.rently.catalog.mappers.CarBrandMapper;
 import com.rently.rently.catalog.reponses.CarBrandResponse;
 import com.rently.rently.catalog.repositories.CarBrandRepository;
-import com.rently.rently.catalog.requests.CarBrandRequest;
+import com.rently.rently.catalog.requests.brand.CreateCarBrandRequest;
+import com.rently.rently.catalog.requests.brand.UpdateCarBrandRequest;
 import com.rently.rently.catalog.services.CarBrandService;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import javax.swing.text.html.Option;
 import java.util.List;
 import java.util.Optional;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class CarBrandServiceImplementation implements CarBrandService {
     private final CarBrandRepository repository;
     private final CarBrandMapper carBrandMapper;
@@ -25,53 +27,63 @@ public class CarBrandServiceImplementation implements CarBrandService {
     public List<CarBrandResponse> getAll() {
         return repository.findAll()
                 .stream()
-                .map(this.carBrandMapper::toResponse)
+                .map(carBrandMapper::toResponse)
                 .toList();
     }
 
     @Override
     public CarBrandResponse get(String id) {
-        final Optional<CarBrand> brand = Optional.of(this.repository.findById(id)
+        final Optional<CarBrand> brand = Optional.of(repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("CarBrand with id " + id + " not found!")));
 
-        return this.carBrandMapper.toResponse(brand.get());
+        return carBrandMapper.toResponse(brand.get());
     }
 
     @Override
-    public CarBrandResponse create(CarBrandRequest request) {
-        final Optional<CarBrand> carBrandExists = this.repository.findByName(request.getName());
+    public CarBrandResponse create(CreateCarBrandRequest request) {
+        final Optional<CarBrand> carBrandExists = repository.findByName(request.getName());
 
         if (carBrandExists.isPresent()) {
             throw new EntityExistsException("CarBrand with name " + request.getName() + " already exists!");
         }
 
-        final CarBrand entity = this.carBrandMapper.toEntity(request);
-        final CarBrand createdBrand = this.repository.save(entity);
+        final CarBrand entity = carBrandMapper.toEntity(request);
+        final CarBrand createdBrand = repository.save(entity);
 
-        return this.carBrandMapper.toResponse(createdBrand);
+        return carBrandMapper.toResponse(createdBrand);
     }
 
     @Override
-    public void update(@PathVariable String id, CarBrandRequest request) {
-        final Optional<CarBrand> brand = this.repository.findById(id);
+    public void update(@PathVariable String id, UpdateCarBrandRequest request) {
+        final Optional<CarBrand> brand = repository.findById(id);
 
-        if(brand.isEmpty()) {
+        if (brand.isEmpty()) {
             throw new EntityNotFoundException("Car Brand not found");
         }
 
         final CarBrand carBrand = brand.get();
 
-        carBrand.setName(request.getName());
-        this.repository.save(carBrand);
+        if (request.getName() != null) {
+            final Optional<CarBrand> brandWithSameName = repository.findByName(request.getName());
+
+            if(brandWithSameName.isPresent() && !brandWithSameName.get().getId().equals(carBrand.getId())) {
+                throw new EntityExistsException("Car Brand with name " + request.getName() + " already exists!");
+            }
+
+            carBrand.setName(request.getName());
+        }
+        repository.save(carBrand);
     }
 
     @Override
     public void delete(String id) {
-        final  Optional<CarBrand> brand = this.repository.findById(id);
+        final Optional<CarBrand> brand = repository.findById(id);
 
-        if(brand.isEmpty()) {throw new EntityNotFoundException("Car Brand not found");}
+        if (brand.isEmpty()) {
+            throw new EntityNotFoundException("Car Brand not found");
+        }
 
-        this.repository.deleteById(brand.get().getId());
+        repository.deleteById(brand.get().getId());
     }
 
 }

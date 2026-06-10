@@ -15,6 +15,13 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@NamedEntityGraph(
+        name = "CarModel.brand",
+        attributeNodes = {
+                @NamedAttributeNode("brand"),
+        }
+)
+
 public class CarModel extends Auditable {
     @Column(nullable = false, length = 100)
     private String name;
@@ -24,9 +31,6 @@ public class CarModel extends Auditable {
     private VehicleCategory category;
 
     //  Relationships
-    @Column(nullable = false)
-    private String brandId;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "brand_id", nullable = false)
     private CarBrand brand;

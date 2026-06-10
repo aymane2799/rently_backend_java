@@ -1,4 +1,4 @@
-package com.rently.rently.catalog.requests;
+package com.rently.rently.catalog.requests.brand;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -9,8 +9,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class CarBrandRequest {
-    @NotBlank()
+public class UpdateCarBrandRequest {
     @Size(min = 3)
     String name;
 }
