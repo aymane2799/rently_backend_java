@@ -1,5 +1,6 @@
 package com.rently.rently.catalog.models;
 
+import com.rently.rently.catalog.VehicleCategory;
 import lombok.*;
 import org.hibernate.validator.constraints.UUID;
 

@@ -1,10 +1,7 @@
-package com.rently.rently.fleet.entities;
+package com.rently.rently.fleet.vehicles;
 
 import com.rently.rently.catalog.features.Feature;
 import com.rently.rently.catalog.models.Model;
-import com.rently.rently.fleet.enums.FuelType;
-import com.rently.rently.fleet.enums.Transmission;
-import com.rently.rently.fleet.enums.VehicleStatus;
 import com.rently.rently.shared.Auditable;
 import jakarta.persistence.*;
 import lombok.*;
@@ -27,7 +24,7 @@ public class Vehicle extends Auditable {
     @Column(name = "insurance_number", nullable = false, unique = true, length = 20)
     private String insuranceNumber;
 
-    @Column(name = "insurance_expires_at", nullable = false, unique = true, length = 20)
+    @Column(name = "insurance_expires_at", nullable = false, length = 20)
     private LocalDate insuranceExpiresAt;
 
     @Column(columnDefinition = "SMALLINT")
@@ -35,7 +32,6 @@ public class Vehicle extends Auditable {
 
     @Column(columnDefinition = "SMALLINT")
     private Short month;
-
 
     @Column(length = 50)
     private String color;
@@ -67,18 +63,15 @@ public class Vehicle extends Auditable {
     @Column(name = "daily_base_rate", precision = 10, scale = 2)
     private BigDecimal dailyBaseRate;
 
-
-    //  Relationships
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "model_id", nullable = false)
     private Model model;
 
-    @ManyToMany()
+    @ManyToMany
     @JoinTable(
             name = "vehicle_features",
             joinColumns = @JoinColumn(name = "vehicle_id"),
             inverseJoinColumns = @JoinColumn(name = "feature_id")
     )
     private Set<Feature> features;
-
 }

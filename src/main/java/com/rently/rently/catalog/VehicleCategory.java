@@ -1,4 +1,4 @@
-package com.rently.rently.catalog.models;
+package com.rently.rently.catalog;
 
 public enum VehicleCategory {
     ECONOMY,

@@ -1,5 +1,6 @@
 package com.rently.rently.catalog.models;
 
+import com.rently.rently.catalog.VehicleCategory;
 import com.rently.rently.catalog.brands.Brand;
 import com.rently.rently.shared.Auditable;
 import jakarta.persistence.*;

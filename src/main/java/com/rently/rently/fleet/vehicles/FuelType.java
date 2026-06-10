@@ -1,4 +1,4 @@
-package com.rently.rently.fleet.enums;
+package com.rently.rently.fleet.vehicles;
 
 public enum FuelType {
     DIESEL,
