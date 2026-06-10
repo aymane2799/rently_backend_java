@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/car-models")
+@RequestMapping("/api/v1/models")
 @RequiredArgsConstructor
 public class ModelController {
     private final ModelService service;

@@ -5,7 +5,7 @@ import lombok.*;
 import com.rently.rently.shared.Auditable;
 
 @Entity
-@Table(name = "car_brands")
+@Table(name = "brands")
 @Getter
 @Setter
 @NoArgsConstructor

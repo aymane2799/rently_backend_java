@@ -8,7 +8,7 @@ import lombok.*;
 
 @Entity
 @Table(
-        name = "car_models",
+        name = "models",
         uniqueConstraints = @UniqueConstraint(columnNames = {"brand_id", "name"})
 )
 @Getter
