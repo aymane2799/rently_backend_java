@@ -17,6 +17,16 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@NamedEntityGraph(
+        name = "Vehicle.details",
+        attributeNodes = {
+                @NamedAttributeNode(value = "model", subgraph = "model-brand"),
+                @NamedAttributeNode("features")
+        },
+        subgraphs = {
+                @NamedSubgraph(name = "model-brand", attributeNodes = @NamedAttributeNode("brand"))
+        }
+)
 public class Vehicle extends Auditable {
     @Column(name = "license_plate", nullable = false, unique = true, length = 20)
     private String licensePlate;
@@ -24,7 +34,7 @@ public class Vehicle extends Auditable {
     @Column(name = "insurance_number", nullable = false, unique = true, length = 20)
     private String insuranceNumber;
 
-    @Column(name = "insurance_expires_at", nullable = false, length = 20)
+    @Column(name = "insurance_expires_at", nullable = false)
     private LocalDate insuranceExpiresAt;
 
     @Column(columnDefinition = "SMALLINT")
@@ -36,6 +46,7 @@ public class Vehicle extends Auditable {
     @Column(length = 50)
     private String color;
 
+    @Builder.Default
     @Column(nullable = false)
     private int mileage = 0;
 
@@ -48,6 +59,7 @@ public class Vehicle extends Auditable {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     private VehicleStatus status = VehicleStatus.AVAILABLE;
