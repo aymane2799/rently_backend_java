@@ -172,26 +172,26 @@ Adapts the existing Vehicle implementation to the public-catalog architecture.
 
 Tenant-scoped physical location management.
 
-- [ ] Create `HubType` enum (`AIRPORT`, `TRAIN_STATION`, `MAIN_OFFICE`, `PRIVATE_LOT`)
-- [ ] Create `Branch` entity — `name`, `city`, `address`, `phone`, `isActive`
-- [ ] Create `BranchRepository`
-- [ ] Create `BranchService` + DTOs (`CreateBranchRequest`, `UpdateBranchRequest`, `BranchResponse`)
-- [ ] Implement plan quota check in `BranchService.create` — rejects if `count(branches) >= plan.maxBranches`
-- [ ] Create `BranchController`
-  - [ ] `GET /api/v1/branches`
-  - [ ] `GET /api/v1/branches/{id}`
-  - [ ] `POST /api/v1/branches` — `AGENCY_OWNER` / `BRANCH_MANAGER`
-  - [ ] `PATCH /api/v1/branches/{id}`
-  - [ ] `POST /api/v1/branches/{id}/deactivate`
-- [ ] Create `Hub` entity — `name`, `type`, `city`, `address`, `isActive`, `branch` (FK)
-- [ ] Create `HubRepository`
-- [ ] Create `HubService` + DTOs
-- [ ] Implement plan quota check in `HubService.create` — rejects if `count(hubs) >= plan.maxHubs`
-- [ ] Create `HubController`
-  - [ ] `GET /api/v1/branches/{branchId}/hubs`
-  - [ ] `POST /api/v1/branches/{branchId}/hubs` — `AGENCY_OWNER` / `BRANCH_MANAGER`
-  - [ ] `PATCH /api/v1/hubs/{id}`
-  - [ ] `POST /api/v1/hubs/{id}/deactivate`
+- [x] Create `HubType` enum (`AIRPORT`, `TRAIN_STATION`, `MAIN_OFFICE`, `PRIVATE_LOT`)
+- [x] Create `Branch` entity — `name`, `city`, `address`, `phone`, `isActive`
+- [x] Create `BranchRepository`
+- [x] Create `BranchService` + DTOs (`CreateBranchRequest`, `UpdateBranchRequest`, `BranchResponse`)
+- [x] Implement plan quota check in `BranchService.create` — rejects if `count(branches) >= plan.maxBranches`
+- [x] Create `BranchController`
+  - [x] `GET /api/v1/branches`
+  - [x] `GET /api/v1/branches/{id}`
+  - [x] `POST /api/v1/branches` — `AGENCY_OWNER` / `BRANCH_MANAGER`
+  - [x] `PATCH /api/v1/branches/{id}`
+  - [x] `POST /api/v1/branches/{id}/deactivate`
+- [x] Create `Hub` entity — `name`, `type`, `city`, `address`, `isActive`, `branch` (FK)
+- [x] Create `HubRepository`
+- [x] Create `HubService` + DTOs
+- [x] Implement plan quota check in `HubService.create` — rejects if `count(hubs) >= plan.maxHubs`
+- [x] Create `HubController`
+  - [x] `GET /api/v1/branches/{branchId}/hubs`
+  - [x] `POST /api/v1/branches/{branchId}/hubs` — `AGENCY_OWNER` / `BRANCH_MANAGER`
+  - [x] `PATCH /api/v1/hubs/{id}`
+  - [x] `POST /api/v1/hubs/{id}/deactivate`
 
 ---
 
@@ -299,10 +299,10 @@ Centralised quota guard called from Branch, Hub, and Vehicle service layers.
 | 4. Subscription & Billing | 15 | 15 | 0 |
 | 5. Catalog — Updates & Extensions | 17 | 17 | 0 |
 | 6. Fleet — Updates to Existing Code | 10 | 10 | 0 |
-| 7. Location — Branch & Hub | 16 | 0 | 16 |
+| 7. Location — Branch & Hub | 16 | 16 | 0 |
 | 8. Reservations — Customer & Booking | 15 | 0 | 15 |
 | 9. Payment & Deposit | 8 | 0 | 8 |
 | 10. Signatures & Contract Compliance | 3 | 0 | 3 |
 | 11. Document Generation | 9 | 0 | 9 |
 | 12. Plan Quota Enforcement | 6 | 0 | 6 |
-| **Total** | **142** | **82** | **60** |
+| **Total** | **142** | **98** | **44** |
