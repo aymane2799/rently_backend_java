@@ -201,34 +201,34 @@ Core operational flow.
 
 ### 8.1 Customer
 
-- [ ] Create `IdType` enum (`CIN`, `PASSPORT`)
-- [ ] Create `Customer` entity — `firstName`, `lastName`, `phone`, `email`, `idType`, `idNumber`, `driverLicenseCode`, `address`
-- [ ] Add unique constraint `(id_type, id_number)` on `customers` table
-- [ ] Create `CustomerRepository` — `findByIdTypeAndIdNumber`, `existsByIdTypeAndIdNumber`
-- [ ] Create `CustomerService` + DTOs
-- [ ] Create `CustomerController`
-  - [ ] `GET /api/v1/customers`
-  - [ ] `GET /api/v1/customers/{id}`
-  - [ ] `POST /api/v1/customers`
-  - [ ] `PATCH /api/v1/customers/{id}`
+- [x] Create `IdType` enum (`CIN`, `PASSPORT`)
+- [x] Create `Customer` entity — `firstName`, `lastName`, `phone`, `email`, `idType`, `idNumber`, `driverLicenseCode`, `address`
+- [x] Add unique constraint `(id_type, id_number)` on `customers` table
+- [x] Create `CustomerRepository` — `findByIdTypeAndIdNumber`, `existsByIdTypeAndIdNumber`
+- [x] Create `CustomerService` + DTOs
+- [x] Create `CustomerController`
+  - [x] `GET /api/v1/customers`
+  - [x] `GET /api/v1/customers/{id}`
+  - [x] `POST /api/v1/customers`
+  - [x] `PATCH /api/v1/customers/{id}`
 
 ### 8.2 Reservation
 
-- [ ] Create `ReservationStatus` enum (`ACTIVE`, `CLOSED`, `CANCELLED`)
-- [ ] Create `ContractStatus` enum (`PENDING`, `PARTIAL_EXECUTION`, `FULLY_EXECUTED`)
-- [ ] Create `Reservation` entity — all fields per architecture doc (§2.13)
-- [ ] Create `ReservationRepository` — `findOverlapping(vehicleId, startDate, endDate)` for concurrency check
-- [ ] Create `ReservationService`
-  - [ ] `create` — validates concurrency (no overlapping active reservations for same vehicle), sets `vehicle.status = RENTED`
-  - [ ] `close` — sets `status=CLOSED`; if `returnHub ≠ pickupHub`, sets `vehicle.status = PENDING_RELOCATION`; else sets `vehicle.status = AVAILABLE`
-  - [ ] `cancel` — sets `status=CANCELLED`, restores `vehicle.status = AVAILABLE`
-  - [ ] `updateContractStatus` — derives `ContractStatus` from `isDigitallySigned` + `isPhysicallyPrinted`
-- [ ] Create `ReservationController`
-  - [ ] `POST /api/v1/reservations` — `AGENT` / `BRANCH_MANAGER`
-  - [ ] `GET /api/v1/reservations`
-  - [ ] `GET /api/v1/reservations/{id}`
-  - [ ] `POST /api/v1/reservations/{id}/close`
-  - [ ] `POST /api/v1/reservations/{id}/cancel`
+- [x] Create `ReservationStatus` enum (`ACTIVE`, `CLOSED`, `CANCELLED`)
+- [x] Create `ContractStatus` enum (`PENDING`, `PARTIAL_EXECUTION`, `FULLY_EXECUTED`)
+- [x] Create `Reservation` entity — all fields per architecture doc (§2.13)
+- [x] Create `ReservationRepository` — `findOverlapping(vehicleId, startDate, endDate)` for concurrency check
+- [x] Create `ReservationService`
+  - [x] `create` — validates concurrency (no overlapping active reservations for same vehicle), sets `vehicle.status = RENTED`
+  - [x] `close` — sets `status=CLOSED`; if `returnHub ≠ pickupHub`, sets `vehicle.status = PENDING_RELOCATION`; else sets `vehicle.status = AVAILABLE`
+  - [x] `cancel` — sets `status=CANCELLED`, restores `vehicle.status = AVAILABLE`
+  - [x] `updateContractStatus` — derives `ContractStatus` from `isDigitallySigned` + `isPhysicallyPrinted`
+- [x] Create `ReservationController`
+  - [x] `POST /api/v1/reservations` — `AGENT` / `BRANCH_MANAGER`
+  - [x] `GET /api/v1/reservations`
+  - [x] `GET /api/v1/reservations/{id}`
+  - [x] `POST /api/v1/reservations/{id}/close`
+  - [x] `POST /api/v1/reservations/{id}/cancel`
 
 ---
 
@@ -300,9 +300,9 @@ Centralised quota guard called from Branch, Hub, and Vehicle service layers.
 | 5. Catalog — Updates & Extensions | 17 | 17 | 0 |
 | 6. Fleet — Updates to Existing Code | 10 | 10 | 0 |
 | 7. Location — Branch & Hub | 16 | 16 | 0 |
-| 8. Reservations — Customer & Booking | 15 | 0 | 15 |
+| 8. Reservations — Customer & Booking | 15 | 15 | 0 |
 | 9. Payment & Deposit | 8 | 0 | 8 |
 | 10. Signatures & Contract Compliance | 3 | 0 | 3 |
 | 11. Document Generation | 9 | 0 | 9 |
 | 12. Plan Quota Enforcement | 6 | 0 | 6 |
-| **Total** | **142** | **98** | **44** |
+| **Total** | **142** | **113** | **29** |
