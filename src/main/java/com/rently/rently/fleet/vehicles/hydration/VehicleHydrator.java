@@ -11,16 +11,10 @@ public class VehicleHydrator {
     private final VehicleHydrationResolver resolver;
 
     public VehicleHydrationContext hydrate(CreateVehicleRequest request) {
-        return VehicleHydrationContext.builder()
-                .model(resolver.resolveModel(request.getModelId()))
-                .features(resolver.resolveFeatures(request.getFeatureIds()))
-                .build();
+        return VehicleHydrationContext.builder().build();
     }
 
     public VehicleHydrationContext hydrate(UpdateVehicleRequest request) {
-        return VehicleHydrationContext.builder()
-                .model(resolver.resolveModel(request.getModelId()))
-                .features(resolver.resolveFeatures(request.getFeatureIds()))
-                .build();
+        return VehicleHydrationContext.builder().build();
     }
 }

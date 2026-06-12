@@ -32,4 +32,9 @@ public class UpdateVehicleRequest {
     private String modelId;
 
     private Set<String> featureIds;
+
+    @UUID
+    private String currentHubId;
+
+    private String currentParkingSlot;
 }

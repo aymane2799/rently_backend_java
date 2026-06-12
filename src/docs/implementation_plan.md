@@ -150,21 +150,21 @@ Moves existing catalog entities to public-schema context, adds soft-delete, and 
 
 Adapts the existing Vehicle implementation to the public-catalog architecture.
 
-- [ ] *(update)* `VehicleStatus` enum — add `PENDING_RELOCATION`
-- [ ] *(update)* `Vehicle` entity
+- [x] *(update)* `VehicleStatus` enum — add `PENDING_RELOCATION`
+- [x] *(update)* `Vehicle` entity
   - Replace `@ManyToOne Model model` with `String modelId` plain column
   - Replace `@ManyToMany Set<Feature> features` with `@ElementCollection Set<String> featureIds`
   - Add `String currentHubId` plain column (FK-by-app to tenant `hubs.id`)
   - Add `String currentParkingSlot` column
-- [ ] *(update)* `VehicleHydrationContext` — remove `Model` and `Set<Feature>`; add `Hub` (for `currentHubId` existence check)
-- [ ] *(update)* `VehicleHydrationResolver` — remove model/feature resolution (now handled by `PublicCatalogService`); add hub existence check
-- [ ] *(update)* `VehicleHydrator` — align with updated resolver
-- [ ] *(update)* `VehicleMapper`
+- [x] *(update)* `VehicleHydrationContext` — remove `Model` and `Set<Feature>`; add `Hub` (for `currentHubId` existence check)
+- [x] *(update)* `VehicleHydrationResolver` — remove model/feature resolution (now handled by `PublicCatalogService`); add hub existence check
+- [x] *(update)* `VehicleHydrator` — align with updated resolver
+- [x] *(update)* `VehicleMapper`
   - `toEntity` receives plain IDs, no longer receives resolved Model/Feature objects
   - `toResponse` calls `PublicCatalogService` to resolve `modelId` → `ModelResponse` and `featureIds` → `Set<FeatureResponse>`
-- [ ] *(update)* `VehicleServiceImplementation` — inject `PublicCatalogService`; add `modelExists` + `allFeaturesExist` checks before create/update; add plan quota check (max vehicles per `SubscriptionPlan.maxVehicles`)
-- [ ] *(update)* `CreateVehicleRequest` — verify `featureIds` is `Set<String>` (UUID refs), `modelId` is `String` with `@UUID`
-- [ ] *(update)* `VehicleRepository` — add `countByTenant` for quota check if needed
+- [x] *(update)* `VehicleServiceImplementation` — inject `PublicCatalogService`; add `modelExists` + `allFeaturesExist` checks before create/update; add plan quota check (max vehicles per `SubscriptionPlan.maxVehicles`)
+- [x] *(update)* `CreateVehicleRequest` — verify `featureIds` is `Set<String>` (UUID refs), `modelId` is `String` with `@UUID`
+- [x] *(update)* `VehicleRepository` — add `countByTenant` for quota check if needed
 
 ---
 
@@ -298,11 +298,11 @@ Centralised quota guard called from Branch, Hub, and Vehicle service layers.
 | 3. Agency Registration & Management | 25 | 25 | 0 |
 | 4. Subscription & Billing | 15 | 15 | 0 |
 | 5. Catalog — Updates & Extensions | 17 | 17 | 0 |
-| 6. Fleet — Updates to Existing Code | 10 | 8 | 2 |
+| 6. Fleet — Updates to Existing Code | 10 | 10 | 0 |
 | 7. Location — Branch & Hub | 16 | 0 | 16 |
 | 8. Reservations — Customer & Booking | 15 | 0 | 15 |
 | 9. Payment & Deposit | 8 | 0 | 8 |
 | 10. Signatures & Contract Compliance | 3 | 0 | 3 |
 | 11. Document Generation | 9 | 0 | 9 |
 | 12. Plan Quota Enforcement | 6 | 0 | 6 |
-| **Total** | **142** | **80** | **62** |
+| **Total** | **142** | **82** | **60** |

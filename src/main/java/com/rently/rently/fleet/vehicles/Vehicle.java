@@ -1,13 +1,12 @@
 package com.rently.rently.fleet.vehicles;
 
-import com.rently.rently.catalog.features.Feature;
-import com.rently.rently.catalog.models.Model;
 import com.rently.rently.shared.Auditable;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -17,16 +16,6 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@NamedEntityGraph(
-        name = "Vehicle.details",
-        attributeNodes = {
-                @NamedAttributeNode(value = "model", subgraph = "model-brand"),
-                @NamedAttributeNode("features")
-        },
-        subgraphs = {
-                @NamedSubgraph(name = "model-brand", attributeNodes = @NamedAttributeNode("brand"))
-        }
-)
 public class Vehicle extends Auditable {
     @Column(name = "license_plate", nullable = false, unique = true, length = 20)
     private String licensePlate;
@@ -75,15 +64,21 @@ public class Vehicle extends Auditable {
     @Column(name = "daily_base_rate", precision = 10, scale = 2)
     private BigDecimal dailyBaseRate;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "model_id", nullable = false)
-    private Model model;
+    @Column(name = "model_id", nullable = false)
+    private String modelId;
 
-    @ManyToMany
-    @JoinTable(
+    @Builder.Default
+    @ElementCollection
+    @CollectionTable(
             name = "vehicle_features",
-            joinColumns = @JoinColumn(name = "vehicle_id"),
-            inverseJoinColumns = @JoinColumn(name = "feature_id")
+            joinColumns = @JoinColumn(name = "vehicle_id")
     )
-    private Set<Feature> features;
+    @Column(name = "feature_id")
+    private Set<String> featureIds = new HashSet<>();
+
+    @Column(name = "current_hub_id")
+    private String currentHubId;
+
+    @Column(name = "current_parking_slot", length = 100)
+    private String currentParkingSlot;
 }

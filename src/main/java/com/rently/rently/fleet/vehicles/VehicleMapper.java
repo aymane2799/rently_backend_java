@@ -1,8 +1,12 @@
 package com.rently.rently.fleet.vehicles;
 
+import com.rently.rently.catalog.PublicCatalogService;
+import com.rently.rently.catalog.features.Feature;
 import com.rently.rently.catalog.features.FeatureMapper;
 import com.rently.rently.catalog.features.FeatureResponse;
+import com.rently.rently.catalog.models.Model;
 import com.rently.rently.catalog.models.ModelMapper;
+import com.rently.rently.catalog.models.ModelResponse;
 import com.rently.rently.fleet.vehicles.hydration.VehicleHydrationContext;
 import com.rently.rently.shared.mappers.CreateMapper;
 import com.rently.rently.shared.mappers.PatchMapper;
@@ -10,6 +14,7 @@ import com.rently.rently.shared.mappers.ResponseMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -20,6 +25,7 @@ public class VehicleMapper implements
         CreateMapper<Vehicle, CreateVehicleRequest, VehicleHydrationContext>,
         PatchMapper<Vehicle, UpdateVehicleRequest, VehicleHydrationContext> {
 
+    private final PublicCatalogService publicCatalogService;
     private final ModelMapper modelMapper;
     private final FeatureMapper featureMapper;
 
@@ -39,8 +45,10 @@ public class VehicleMapper implements
                 .transmission(request.getTransmission())
                 .fuelType(request.getFuelType())
                 .dailyBaseRate(request.getDailyBaseRate())
-                .model(ctx.getModel())
-                .features(ctx.getFeatures() != null ? ctx.getFeatures() : Set.of())
+                .modelId(request.getModelId())
+                .featureIds(request.getFeatureIds() != null ? request.getFeatureIds() : Set.of())
+                .currentHubId(request.getCurrentHubId())
+                .currentParkingSlot(request.getCurrentParkingSlot())
                 .build();
     }
 
@@ -60,15 +68,24 @@ public class VehicleMapper implements
         if (request.getTransmission() != null) entity.setTransmission(request.getTransmission());
         if (request.getFuelType() != null) entity.setFuelType(request.getFuelType());
         if (request.getDailyBaseRate() != null) entity.setDailyBaseRate(request.getDailyBaseRate());
-        if (ctx.getModel() != null) entity.setModel(ctx.getModel());
-        if (ctx.getFeatures() != null) entity.setFeatures(ctx.getFeatures());
+        if (request.getModelId() != null) entity.setModelId(request.getModelId());
+        if (request.getFeatureIds() != null) entity.setFeatureIds(request.getFeatureIds());
+        if (request.getCurrentHubId() != null) entity.setCurrentHubId(request.getCurrentHubId());
+        if (request.getCurrentParkingSlot() != null) entity.setCurrentParkingSlot(request.getCurrentParkingSlot());
     }
 
     @Override
     public VehicleResponse toResponse(Vehicle entity) {
-        final Set<FeatureResponse> features = entity.getFeatures() != null
-                ? entity.getFeatures().stream().map(featureMapper::toResponse).collect(Collectors.toSet())
-                : Set.of();
+        Model model = publicCatalogService.getModel(entity.getModelId());
+        ModelResponse modelResponse = modelMapper.toResponse(model);
+
+        Set<FeatureResponse> featureResponses = Set.of();
+        if (entity.getFeatureIds() != null && !entity.getFeatureIds().isEmpty()) {
+            List<Feature> features = publicCatalogService.getFeatures(entity.getFeatureIds());
+            featureResponses = features.stream()
+                    .map(featureMapper::toResponse)
+                    .collect(Collectors.toSet());
+        }
 
         return VehicleResponse.builder()
                 .id(entity.getId())
@@ -86,8 +103,10 @@ public class VehicleMapper implements
                 .transmission(entity.getTransmission())
                 .fuelType(entity.getFuelType())
                 .dailyBaseRate(entity.getDailyBaseRate())
-                .model(modelMapper.toResponse(entity.getModel()))
-                .features(features)
+                .model(modelResponse)
+                .features(featureResponses)
+                .currentHubId(entity.getCurrentHubId())
+                .currentParkingSlot(entity.getCurrentParkingSlot())
                 .build();
     }
 }

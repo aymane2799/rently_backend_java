@@ -1,5 +1,6 @@
 package com.rently.rently.fleet.vehicles;
 
+import com.rently.rently.catalog.PublicCatalogService;
 import com.rently.rently.fleet.vehicles.hydration.VehicleHydrationContext;
 import com.rently.rently.fleet.vehicles.hydration.VehicleHydrator;
 import jakarta.persistence.EntityExistsException;
@@ -8,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -15,6 +17,7 @@ public class VehicleServiceImplementation implements VehicleService {
     private final VehicleRepository repository;
     private final VehicleMapper vehicleMapper;
     private final VehicleHydrator hydrator;
+    private final PublicCatalogService publicCatalogService;
 
     @Override
     public List<VehicleResponse> getAll() {
@@ -35,6 +38,15 @@ public class VehicleServiceImplementation implements VehicleService {
         }
         if (repository.findByInsuranceNumber(request.getInsuranceNumber()).isPresent()) {
             throw new EntityExistsException("Vehicle with insurance number " + request.getInsuranceNumber() + " already exists!");
+        }
+
+        if (!publicCatalogService.modelExists(request.getModelId())) {
+            throw new EntityNotFoundException("Model not found: " + request.getModelId());
+        }
+
+        Set<String> featureIds = request.getFeatureIds();
+        if (featureIds != null && !featureIds.isEmpty() && !publicCatalogService.allFeaturesExist(featureIds)) {
+            throw new EntityNotFoundException("One or more features not found");
         }
 
         final VehicleHydrationContext context = hydrator.hydrate(request);
@@ -60,6 +72,15 @@ public class VehicleServiceImplementation implements VehicleService {
                     throw new EntityExistsException("Vehicle with insurance number " + request.getInsuranceNumber() + " already exists!");
                 }
             });
+        }
+
+        if (request.getModelId() != null && !publicCatalogService.modelExists(request.getModelId())) {
+            throw new EntityNotFoundException("Model not found: " + request.getModelId());
+        }
+
+        Set<String> featureIds = request.getFeatureIds();
+        if (featureIds != null && !featureIds.isEmpty() && !publicCatalogService.allFeaturesExist(featureIds)) {
+            throw new EntityNotFoundException("One or more features not found");
         }
 
         final VehicleHydrationContext context = hydrator.hydrate(request);

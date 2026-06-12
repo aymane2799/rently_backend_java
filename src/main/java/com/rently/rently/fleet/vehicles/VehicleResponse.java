@@ -31,4 +31,6 @@ public class VehicleResponse {
     private BigDecimal dailyBaseRate;
     private ModelResponse model;
     private Set<FeatureResponse> features;
+    private String currentHubId;
+    private String currentParkingSlot;
 }
