@@ -1040,3 +1040,64 @@ Incoming HTTP Request
 | `AuthController` | `auth/` | `POST /api/v1/auth/login` — credential check → token |
 | `TenantFilter` | `config/` (multi-tenancy) | Reads `X-Tenant-ID` header into `TenantContext` thread-local |
 | `BCryptPasswordEncoder` | bean in `SecurityConfig` | Password hashing on registration; matching on login |
+
+---
+
+## 9. Controller Separation Pattern
+
+Each domain that serves both `SUPER_ADMIN` and agency roles uses **two controllers** — never one controller branching on role. Services are shared unless the business logic genuinely diverges.
+
+### 9.1 Naming Convention
+
+| Controller name | URL prefix | Caller |
+| --------------- | ---------- | ------ |
+| `AdminXyzController` | `/api/v1/admin/xyz` | `SUPER_ADMIN` — enforced by `SecurityConfig` path rule |
+| `XyzController` | `/api/v1/xyz` | Agency roles — fine-grained via `@PreAuthorize` |
+| `RegistrationController` | `/api/v1/agencies` | Public (no auth) — explicit `permitAll` in `SecurityConfig` |
+
+### 9.2 Current Controller Map
+
+#### `agency/`
+| Controller | Path | Caller | Notes |
+| ---------- | ---- | ------ | ----- |
+| `AdminAgencyController` | `/api/v1/admin/agencies` | `SUPER_ADMIN` | List all, block, unblock |
+| `AdminRegistrationController` | `/api/v1/admin/agencies/registrations` | `SUPER_ADMIN` | List, approve, reject |
+| `RegistrationController` | `/api/v1/agencies/register` | Public | Submit new agency application |
+
+#### `auth/`
+| Controller | Path | Caller | Notes |
+| ---------- | ---- | ------ | ----- |
+| `AuthController` | `/api/v1/auth` | Public | Login — token issuance |
+| `UserController` | `/api/v1/users` | `AGENCY_OWNER` | Manage staff within own agency |
+
+#### `billing/`
+| Controller | Path | Caller | Notes |
+| ---------- | ---- | ------ | ----- |
+| `AdminSubscriptionController` | `/api/v1/admin/subscriptions` | `SUPER_ADMIN` | Create subscriptions, mark paid |
+| `AdminSubscriptionPlanController` | `/api/v1/admin/plans` | `SUPER_ADMIN` | Full CRUD + deactivate on plans |
+| `AgencySubscriptionController` | `/api/v1/settings/subscription` | `AGENCY_OWNER` | View own active subscription |
+| `SubscriptionPlanController` | `/api/v1/plans` | Any authenticated | List active plans (read-only) |
+
+#### `catalog/`
+| Controller | Path | Caller | Notes |
+| ---------- | ---- | ------ | ----- |
+| `AdminBrandController` | `/api/v1/admin/brands` | `SUPER_ADMIN` | Create, update, deactivate |
+| `AdminModelController` | `/api/v1/admin/models` | `SUPER_ADMIN` | Create, update, deactivate |
+| `AdminFeatureController` | `/api/v1/admin/features` | `SUPER_ADMIN` | Create, update, deactivate |
+| `BrandController` | `/api/v1/brands` | Any authenticated | Read-only |
+| `ModelController` | `/api/v1/models` | Any authenticated | Read-only |
+| `FeatureController` | `/api/v1/features` | Any authenticated | Read-only |
+
+#### `fleet/`
+| Controller | Path | Caller | Notes |
+| ---------- | ---- | ------ | ----- |
+| `VehicleController` | `/api/v1/vehicles` | Agency roles | Tenant-scoped; no admin cross-tenant reads needed |
+
+### 9.3 Service Split Rule
+
+Services are only split when the operation logic genuinely differs between admin and agency callers:
+
+- **Shared service** — same logic, different caller (e.g., `getVehicle(id)` is identical whether the admin or an agent calls it; the controller enforces who may call it).
+- **Split service** — different workflow (e.g., `AgencyRegistrationService` handles public submission; admin approval creates an `Agency` + `User` + tenant schema atomically in one `@Transactional` — that is not the same operation).
+
+Catalog write operations (`BrandService`, `ModelService`, `FeatureService`) expose `delete(id)` from `CRUDService`. The admin controller maps this to `POST /{id}/deactivate` (soft-delete per §6.4) — no hard-delete endpoint is exposed.

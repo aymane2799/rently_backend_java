@@ -9,7 +9,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/admin/agencies")
 @RequiredArgsConstructor
-public class AgencyController {
+public class AdminAgencyController {
 
     private final AgencyService service;
 

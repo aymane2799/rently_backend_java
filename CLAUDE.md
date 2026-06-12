@@ -73,7 +73,9 @@ All code lives under `com.rently.rently`:
 | `shared` | — | `Auditable`, `CRUDService`, mapper interfaces |
 | `validation` | — | `@ValidEnum` + `EnumValidator` |
 
-Each sub-package is self-contained: entity, repository, service interface + impl, mapper, controller, request/response DTOs, and optionally a `hydration/` sub-package.
+Each sub-package is self-contained: entity, repository, service interface + impl, mapper, one or more controllers, request/response DTOs, and optionally a `hydration/` sub-package.
+
+Domains that serve both `SUPER_ADMIN` and agency roles use **two controllers** — an `AdminXyzController` mapped to `/api/v1/admin/xyz` and a plain `XyzController` mapped to `/api/v1/xyz`. Services are shared unless the logic genuinely diverges. See `src/docs/architecture.md §9` for the full controller map.
 
 ---
 
@@ -208,14 +210,17 @@ On approval (single `@Transactional`): creates `Agency`, creates owner `User` (r
 ## API Conventions
 
 - Base path: `/api/v1/`
-- Admin endpoints: `/api/v1/admin/` (`SUPER_ADMIN` only)
+- Admin endpoints: `/api/v1/admin/` (`SUPER_ADMIN` only — enforced by `SecurityConfig` path rule)
+- Agency endpoints: `/api/v1/` — fine-grained role checks via `@PreAuthorize`
 - `POST` → `201 CREATED` returning the created resource
 - `PATCH` → `204 NO_CONTENT`
-- `DELETE` / deactivate → `204 NO_CONTENT`
+- Soft-delete (catalog entities): `POST /{id}/deactivate` → `204 NO_CONTENT` — no hard-delete endpoint
 - Validation: Bean Validation (`@Valid`) on request bodies; `@ValidEnum` for string-to-enum fields
 - Domain errors: `EntityNotFoundException` (→ 404) and `EntityExistsException` (→ 409)
 - Quota exceeded: `HTTP 403`
 - Enums persisted as `STRING` (`@Enumerated(EnumType.STRING)`)
+
+**Controller naming rule:** `AdminXyzController` for admin, `XyzController` for agency/public. Never mix callers in one controller. See `src/docs/architecture.md §9` for the full breakdown.
 
 ---
 
