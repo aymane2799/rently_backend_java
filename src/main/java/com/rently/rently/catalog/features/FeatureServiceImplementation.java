@@ -15,7 +15,7 @@ public class FeatureServiceImplementation implements FeatureService {
 
     @Override
     public List<FeatureResponse> getAll() {
-        return repository.findAll()
+        return repository.findAllByIsActive(true)
                 .stream()
                 .map(featureMapper::toResponse)
                 .toList();
@@ -59,6 +59,7 @@ public class FeatureServiceImplementation implements FeatureService {
     public void delete(String id) {
         final Feature feature = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Feature with id " + id + " not found!"));
-        repository.delete(feature);
+        feature.setActive(false);
+        repository.save(feature);
     }
 }

@@ -30,6 +30,7 @@ public class BrandMapper
         return BrandResponse.builder()
                 .id(entity.getId())
                 .name(entity.getName())
+                .isActive(entity.isActive())
                 .build();
     }
 }

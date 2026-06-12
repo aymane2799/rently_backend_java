@@ -18,7 +18,7 @@ public class ModelServiceImplementation implements ModelService {
 
     @Override
     public List<ModelResponse> getAll() {
-        return repository.findAll()
+        return repository.findAllByIsActive(true)
                 .stream()
                 .map(modelMapper::toResponse)
                 .toList();
@@ -64,6 +64,7 @@ public class ModelServiceImplementation implements ModelService {
     public void delete(String id) {
         final Model model = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Car Model with id " + id + " not found!"));
-        repository.deleteById(model.getId());
+        model.setActive(false);
+        repository.save(model);
     }
 }

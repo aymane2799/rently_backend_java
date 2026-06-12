@@ -43,6 +43,7 @@ public class FeatureMapper implements
                 .name(feature.getName())
                 .icon(feature.getIcon())
                 .description(feature.getDescription())
+                .isActive(feature.isActive())
                 .build();
     }
 }

@@ -13,4 +13,7 @@ public interface ModelRepository extends JpaRepository<Model, String> {
 
     @EntityGraph(value = "Model.brand")
     List<Model> findAll();
+
+    @EntityGraph(value = "Model.brand")
+    List<Model> findAllByIsActive(boolean isActive);
 }

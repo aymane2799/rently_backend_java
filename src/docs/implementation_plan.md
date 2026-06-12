@@ -111,38 +111,38 @@ Moves existing catalog entities to public-schema context, adds soft-delete, and 
 
 ### 5.1 Updates to existing Brand / Model / Feature
 
-- [ ] *(update)* `Brand` entity — add `isActive` field (`boolean`, default `true`); remove `@Table` tenant-routing annotation if present; ensure entity is resolved via public-schema `EntityManager`
-- [ ] *(update)* `Feature` entity — add `isActive` field
-- [ ] *(update)* `Model` entity — add `isActive` field
-- [ ] *(update)* `BrandController` — replace `DELETE /{id}` with `POST /{id}/deactivate`; add `isActive` filter to `GET /`
-- [ ] *(update)* `FeatureController` — same deactivate pattern
-- [ ] *(update)* `ModelController` — same deactivate pattern
-- [ ] *(update)* `BrandServiceImplementation` — remove hard-delete logic; implement deactivate
-- [ ] *(update)* `FeatureServiceImplementation` — same
-- [ ] *(update)* `ModelServiceImplementation` — same
+- [x] *(update)* `Brand` entity — add `isActive` field (`boolean`, default `true`); remove `@Table` tenant-routing annotation if present; ensure entity is resolved via public-schema `EntityManager`
+- [x] *(update)* `Feature` entity — add `isActive` field
+- [x] *(update)* `Model` entity — add `isActive` field
+- [x] *(update)* `BrandController` — replace `DELETE /{id}` with `POST /{id}/deactivate`; add `isActive` filter to `GET /`
+- [x] *(update)* `FeatureController` — same deactivate pattern
+- [x] *(update)* `ModelController` — same deactivate pattern
+- [x] *(update)* `BrandServiceImplementation` — remove hard-delete logic; implement deactivate
+- [x] *(update)* `FeatureServiceImplementation` — same
+- [x] *(update)* `ModelServiceImplementation` — same
 
 ### 5.2 `PublicCatalogService`
 
-- [ ] Configure a `@Qualifier("publicEntityManagerFactory")` `EntityManagerFactory` bean pointing to the public schema, bypassing `CurrentTenantIdentifierResolver`
-- [ ] Implement `PublicCatalogService` — `getModel`, `getFeatures`, `modelExists`, `allFeaturesExist`, `getBrand`, `brandExists`
+- [x] Configure a `@Qualifier("publicEntityManagerFactory")` `EntityManagerFactory` bean pointing to the public schema, bypassing `CurrentTenantIdentifierResolver`
+- [x] Implement `PublicCatalogService` — `getModel`, `getFeatures`, `modelExists`, `allFeaturesExist`, `getBrand`, `brandExists`
 
 ### 5.3 Catalog Extension Requests
 
-- [ ] Create `CatalogRequestType` enum (`BRAND`, `MODEL`, `FEATURE`)
-- [ ] Create `CatalogRequestStatus` enum (`PENDING`, `APPROVED`, `REJECTED`)
-- [ ] Create `CatalogRequest` entity — all fields per architecture doc (§2.8)
-- [ ] Create `CatalogRequestRepository` — `findByAgencySlug`, `findAllByStatus`, `findAllByTypeAndStatus`
-- [ ] Create `SubmitCatalogRequestRequest` DTO + `CatalogRequestResponse` DTO
-- [ ] Create `CatalogRequestService`
-  - [ ] `submit` — validates required fields per type (e.g., `proposedCategory` required for MODEL), creates `PENDING` record
-  - [ ] `approve` — creates the catalog entity (Brand / Model / Feature), sets `resolvedEntityId`, sets `status=APPROVED`
-  - [ ] `reject` — sets `status=REJECTED`, persists `rejectionReason`
-- [ ] Create `CatalogRequestController`
-  - [ ] `POST /api/v1/catalog-requests` — `AGENCY_OWNER` / `BRANCH_MANAGER`
-  - [ ] `GET /api/v1/catalog-requests` — `AGENCY_OWNER` — own agency's requests
-  - [ ] `GET /api/v1/admin/catalog-requests` — `SUPER_ADMIN`, filterable by type + status
-  - [ ] `POST /api/v1/admin/catalog-requests/{id}/approve` — `SUPER_ADMIN`
-  - [ ] `POST /api/v1/admin/catalog-requests/{id}/reject` — `SUPER_ADMIN`
+- [x] Create `CatalogRequestType` enum (`BRAND`, `MODEL`, `FEATURE`)
+- [x] Create `CatalogRequestStatus` enum (`PENDING`, `APPROVED`, `REJECTED`)
+- [x] Create `CatalogRequest` entity — all fields per architecture doc (§2.8)
+- [x] Create `CatalogRequestRepository` — `findByAgencySlug`, `findAllByStatus`, `findAllByTypeAndStatus`
+- [x] Create `SubmitCatalogRequestRequest` DTO + `CatalogRequestResponse` DTO
+- [x] Create `CatalogRequestService`
+  - [x] `submit` — validates required fields per type (e.g., `proposedCategory` required for MODEL), creates `PENDING` record
+  - [x] `approve` — creates the catalog entity (Brand / Model / Feature), sets `resolvedEntityId`, sets `status=APPROVED`
+  - [x] `reject` — sets `status=REJECTED`, persists `rejectionReason`
+- [x] Create `CatalogRequestController`
+  - [x] `POST /api/v1/catalog-requests` — `AGENCY_OWNER` / `BRANCH_MANAGER`
+  - [x] `GET /api/v1/catalog-requests` — `AGENCY_OWNER` — own agency's requests
+  - [x] `GET /api/v1/admin/catalog-requests` — `SUPER_ADMIN`, filterable by type + status
+  - [x] `POST /api/v1/admin/catalog-requests/{id}/approve` — `SUPER_ADMIN`
+  - [x] `POST /api/v1/admin/catalog-requests/{id}/reject` — `SUPER_ADMIN`
 
 ---
 
@@ -297,7 +297,7 @@ Centralised quota guard called from Branch, Hub, and Vehicle service layers.
 | 2. Auth & Security | 10 | 10 | 0 |
 | 3. Agency Registration & Management | 25 | 25 | 0 |
 | 4. Subscription & Billing | 15 | 15 | 0 |
-| 5. Catalog — Updates & Extensions | 17 | 9 | 8 |
+| 5. Catalog — Updates & Extensions | 17 | 17 | 0 |
 | 6. Fleet — Updates to Existing Code | 10 | 8 | 2 |
 | 7. Location — Branch & Hub | 16 | 0 | 16 |
 | 8. Reservations — Customer & Booking | 15 | 0 | 15 |
@@ -305,4 +305,4 @@ Centralised quota guard called from Branch, Hub, and Vehicle service layers.
 | 10. Signatures & Contract Compliance | 3 | 0 | 3 |
 | 11. Document Generation | 9 | 0 | 9 |
 | 12. Plan Quota Enforcement | 6 | 0 | 6 |
-| **Total** | **142** | **72** | **70** |
+| **Total** | **142** | **80** | **62** |

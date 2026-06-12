@@ -42,12 +42,12 @@ public class ModelMapper implements
     public ModelResponse toResponse(final Model entity) {
         final BrandResponse brand = brandMapper.toResponse(entity.getBrand());
 
-
         return ModelResponse.builder()
                 .id(entity.getId())
                 .name(entity.getName())
                 .category(entity.getCategory())
                 .brand(brand)
+                .isActive(entity.isActive())
                 .build();
-}
+    }
 }

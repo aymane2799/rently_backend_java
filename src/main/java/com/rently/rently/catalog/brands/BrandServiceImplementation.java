@@ -15,7 +15,7 @@ public class BrandServiceImplementation implements BrandService {
 
     @Override
     public List<BrandResponse> getAll() {
-        return repository.findAll()
+        return repository.findAllByIsActive(true)
                 .stream()
                 .map(brandMapper::toResponse)
                 .toList();
@@ -59,6 +59,7 @@ public class BrandServiceImplementation implements BrandService {
     public void delete(String id) {
         final Brand brand = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Brand with id " + id + " not found!"));
-        repository.deleteById(brand.getId());
+        brand.setActive(false);
+        repository.save(brand);
     }
 }

@@ -14,4 +14,5 @@ public class ModelResponse {
     private String name;
     private VehicleCategory category;
     private BrandResponse brand;
+    private boolean isActive;
 }

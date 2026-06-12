@@ -733,7 +733,7 @@ Catalog entities are never hard-deleted (see §23). A `modelId` stored on a `Veh
 
 **Why a dedicated EntityManager:**
 
-In a multi-tenant request, the default `EntityManager` routes to the tenant schema. If a tenant service injects the default `EntityManager` and calls `em.find(Model.class, id)`, Hibernate looks in the tenant schema — where `car_models` doesn't exist. The dedicated `publicEntityManagerFactory` bypasses `CurrentTenantIdentifierResolver` entirely, pointing permanently at the public schema regardless of which tenant is active.
+In a multi-tenant request, the default `EntityManager` routes to the tenant schema. If a tenant service injects the default `EntityManager` and calls `em.find(Model.class, id)`, Hibernate looks in the tenant schema — where `models` doesn't exist. The dedicated `publicEntityManagerFactory` bypasses `CurrentTenantIdentifierResolver` entirely, pointing permanently at the public schema regardless of which tenant is active.
 
 **Why a service wrapper and not a repository:**
 

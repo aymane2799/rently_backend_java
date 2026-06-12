@@ -12,4 +12,5 @@ public class FeatureResponse {
     private String name;
     private String icon;
     private String description;
+    private boolean isActive;
 }

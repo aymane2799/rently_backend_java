@@ -14,4 +14,8 @@ import com.rently.rently.shared.Auditable;
 public class Brand extends Auditable {
     @Column(nullable = false, unique = true, length = 100)
     private String name;
+
+    @Builder.Default
+    @Column(name = "is_active", nullable = false)
+    private boolean isActive = true;
 }

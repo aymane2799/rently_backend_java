@@ -31,6 +31,10 @@ public class Model extends Auditable {
     @Column(nullable = false, length = 50)
     private VehicleCategory category;
 
+    @Builder.Default
+    @Column(name = "is_active", nullable = false)
+    private boolean isActive = true;
+
     //  Relationships
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "brand_id", nullable = false)

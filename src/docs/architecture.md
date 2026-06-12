@@ -152,7 +152,7 @@ A configurable plan record managed exclusively by the Super-Admin. Replacing the
 
 ### 2.5 `Brand` [PUBLIC]
 
-**Table:** `car_brands` | **Module:** `catalog`
+**Table:** `brands` | **Module:** `catalog`
 
 Represents an automobile manufacturer (e.g., Toyota, Renault). Shared across all tenants. Agencies may request new brands via `CatalogRequest` (§2.8).
 
@@ -171,15 +171,15 @@ Represents an automobile manufacturer (e.g., Toyota, Renault). Shared across all
 
 ### 2.6 `Model` [PUBLIC]
 
-**Table:** `car_models` | **Module:** `catalog`
+**Table:** `models` | **Module:** `catalog`
 
 A specific car model belonging to a brand (e.g., Toyota Corolla — Sedan). Shared across all tenants. Agencies may request new models via `CatalogRequest` (§2.8).
 
-| Field      | Type              | Column     | Constraints                    |
-| ---------- | ----------------- | ---------- | ------------------------------ |
-| `name`     | `String`          | `name`     | NOT NULL, len≤100              |
-| `category` | `VehicleCategory` | `category` | NOT NULL, STRING enum, len≤50  |
-| `brand`    | `Brand`           | `brand_id` | NOT NULL, FK → `car_brands.id` |
+| Field      | Type              | Column     | Constraints                   |
+| ---------- | ----------------- | ---------- |-------------------------------|
+| `name`     | `String`          | `name`     | NOT NULL, len≤100             |
+| `category` | `VehicleCategory` | `category` | NOT NULL, STRING enum, len≤50 |
+| `brand`    | `Brand`           | `brand_id` | NOT NULL, FK → `brands.id`    |
 
 **Unique constraint:** `(brand_id, name)`
 
@@ -221,23 +221,23 @@ A vehicle amenity tag (e.g., "GPS", "Heated Seats", "Bluetooth"). Shared across 
 
 An agency-initiated request to add a new Brand, Model, or Feature to the shared catalog. Reviewed and actioned by the Super-Admin. On approval the item is created in the shared catalog and becomes immediately available to all tenants.
 
-| Field                 | Type                   | Column                  | Constraints / Default                                |
-| --------------------- | ---------------------- | ----------------------- | ---------------------------------------------------- |
-| `agencySlug`          | `String`               | `agency_slug`           | NOT NULL — submitting agency                         |
-| `type`                | `CatalogRequestType`   | `type`                  | NOT NULL, STRING enum                                |
-| `status`              | `CatalogRequestStatus` | `status`                | NOT NULL, STRING enum, default `PENDING`             |
-| `proposedName`        | `String`               | `proposed_name`         | NOT NULL, len≤100                                    |
-| `proposedBrandId`     | `String`               | `proposed_brand_id`     | nullable — for MODEL requests: FK → `car_brands.id` if the parent brand already exists |
-| `proposedBrandName`   | `String`               | `proposed_brand_name`   | nullable — for MODEL requests: new brand name when brand also needs creating |
-| `proposedCategory`    | `VehicleCategory`      | `proposed_category`     | nullable — for MODEL requests                        |
-| `proposedIcon`        | `String`               | `proposed_icon`         | nullable — for FEATURE requests, len≤100             |
-| `proposedDescription` | `String`               | `proposed_description`  | nullable, TEXT — for FEATURE requests                |
-| `notes`               | `String`               | `notes`                 | nullable, TEXT — agency's justification              |
-| `rejectionReason`     | `String`               | `rejection_reason`      | nullable, TEXT — admin's reason when rejected        |
-| `submittedAt`         | `Instant`              | `submitted_at`          | NOT NULL                                             |
-| `reviewedAt`          | `Instant`              | `reviewed_at`           | nullable — set on approve or reject                  |
-| `reviewedBy`          | `String`               | `reviewed_by`           | nullable — UUID of the admin `User`                  |
-| `resolvedEntityId`    | `String`               | `resolved_entity_id`    | nullable — UUID of the created catalog entity on approval |
+| Field                 | Type                   | Column                  | Constraints / Default                                                              |
+| --------------------- | ---------------------- | ----------------------- |------------------------------------------------------------------------------------|
+| `agencySlug`          | `String`               | `agency_slug`           | NOT NULL — submitting agency                                                       |
+| `type`                | `CatalogRequestType`   | `type`                  | NOT NULL, STRING enum                                                              |
+| `status`              | `CatalogRequestStatus` | `status`                | NOT NULL, STRING enum, default `PENDING`                                           |
+| `proposedName`        | `String`               | `proposed_name`         | NOT NULL, len≤100                                                                  |
+| `proposedBrandId`     | `String`               | `proposed_brand_id`     | nullable — for MODEL requests: FK → `brands.id` if the parent brand already exists |
+| `proposedBrandName`   | `String`               | `proposed_brand_name`   | nullable — for MODEL requests: new brand name when brand also needs creating       |
+| `proposedCategory`    | `VehicleCategory`      | `proposed_category`     | nullable — for MODEL requests                                                      |
+| `proposedIcon`        | `String`               | `proposed_icon`         | nullable — for FEATURE requests, len≤100                                           |
+| `proposedDescription` | `String`               | `proposed_description`  | nullable, TEXT — for FEATURE requests                                              |
+| `notes`               | `String`               | `notes`                 | nullable, TEXT — agency's justification                                            |
+| `rejectionReason`     | `String`               | `rejection_reason`      | nullable, TEXT — admin's reason when rejected                                      |
+| `submittedAt`         | `Instant`              | `submitted_at`          | NOT NULL                                                                           |
+| `reviewedAt`          | `Instant`              | `reviewed_at`           | nullable — set on approve or reject                                                |
+| `reviewedBy`          | `String`               | `reviewed_by`           | nullable — UUID of the admin `User`                                                |
+| `resolvedEntityId`    | `String`               | `resolved_entity_id`    | nullable — UUID of the created catalog entity on approval                          |
 
 **State machine**
 
@@ -277,7 +277,7 @@ A physical car asset belonging to a tenant's fleet.
 | `transmission`       | `Transmission`  | `transmission`         | nullable, STRING enum, len≤20              |
 | `fuelType`           | `FuelType`      | `fuel_type`            | nullable, STRING enum, len≤20              |
 | `dailyBaseRate`      | `BigDecimal`    | `daily_base_rate`      | nullable, precision(10,2)                  |
-| `model`              | `Model`         | `model_id`             | NOT NULL, FK → `car_models.id`             |
+| `model`              | `Model`         | `model_id`             | NOT NULL, FK → `models.id`             |
 | `features`           | `Set<Feature>`  | `vehicle_features`     | ManyToMany join table                      |
 | `currentHub`         | `Hub`           | `current_hub_id`       | nullable, FK → `hubs.id` — updated on every status change to `AVAILABLE` or `RETURNED` |
 | `currentParkingSlot` | `String`        | `current_parking_slot` | nullable, len≤100 — free-text coordinate (e.g., "Row G, Spot 14") |
@@ -761,7 +761,7 @@ Full entity boxes:
 - Schema provisioning is triggered atomically when an agency transitions `PENDING → APPROVED`.
 - **Cross-schema references** are stored as plain UUID strings (not JPA `@ManyToOne`) to avoid cross-schema FK constraint violations. This applies to:
   - `User.agencySlug` / `User.branchId`
-  - `Vehicle.model_id` → `public.car_models.id`
+  - `Vehicle.model_id` → `public.models.id`
   - `vehicle_features.feature_id` → `public.features.id`
 - **Catalog integrity** for the cross-schema references is enforced at the application layer (service-level existence checks before write), not at the database layer.
 
@@ -818,7 +818,7 @@ public class PublicCatalogService {
 public class Vehicle extends Auditable {
 
     @Column(name = "model_id", nullable = false)
-    private String modelId;  // UUID ref → public.car_models.id
+    private String modelId;  // UUID ref → public.models.id
 
     @ElementCollection
     @CollectionTable(
@@ -872,7 +872,7 @@ Because there is no DB FK, a deleted catalog item would leave `model_id` / `feat
 
 | Tenant field               | References             | JPA mapping          | Integrity mechanism            |
 | -------------------------- | ---------------------- | -------------------- | ------------------------------ |
-| `Vehicle.modelId`          | `public.car_models.id` | Plain `String` column | Existence check on write; soft-delete only |
+| `Vehicle.modelId`          | `public.models.id` | Plain `String` column | Existence check on write; soft-delete only |
 | `Vehicle.featureIds`       | `public.features.id`   | `@ElementCollection`  | Existence check on write; soft-delete only |
 | `User.agencySlug`          | `public.agencies.slug` | Plain `String` column | Set once on user creation; slug is immutable after approval |
 | `User.branchId`            | tenant `branches.id`   | Plain `String` column | Existence check on write |
