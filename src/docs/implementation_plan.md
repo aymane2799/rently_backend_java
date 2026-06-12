@@ -45,36 +45,36 @@ Two distinct sub-concerns: the public registration application (`AgencyRegistrat
 
 ### 3.1 `AgencyRegistration` — application lifecycle
 
-- [ ] Create `AgencyRegistrationStatus` enum (`PENDING`, `APPROVED`, `REJECTED`)
-- [ ] Create `AgencyRegistration` entity — `agencyName`, `rcNumber`, `iceNumber`, `ifNumber`, `patente`, `city`, `address`, `website`, `ownerFirstName`, `ownerlastName`, `ownerEmail`, `ownerPhone`, `status`, `rejectionReason`, `submittedAt`, `reviewedAt`, `reviewedBy`, `resolvedAgencyId`
-- [ ] Create `AgencyRegistrationRepository` — `findAllByStatus`, `existsByRcNumber`, `existsByIceNumber`, `existsByOwnerEmail`
-- [ ] Create `SubmitRegistrationRequest` DTO — `agencyName`, `rcNumber`, `iceNumber`, `ifNumber` (opt), `patente` (opt), `city`, `address` (opt), `website` (opt), `ownerFirstName`, `ownerlastName`, `ownerEmail`, `ownerPhone`
-- [ ] Create `AgencyRegistrationResponse` DTO
-- [ ] Create `AgencyRegistrationService` — `submit`, `approve`, `reject`, `getAll`, `get`
-- [ ] Implement `submit` — validates uniqueness of `rcNumber`, `iceNumber`, `ownerEmail`; creates `AgencyRegistration` with `status=PENDING` and `submittedAt`
-- [ ] Implement `approve` — within a single `@Transactional`: creates `Agency` (status=APPROVED, approvedAt=now, slug generated) + creates `User` (role=AGENCY_OWNER, agencySlug set) + calls `TenantSchemaProvisioner` + sets registration `status=APPROVED`, `reviewedAt`, `resolvedAgencyId`; sends welcome email placeholder
-- [ ] Implement `reject` — sets registration `status=REJECTED`, `reviewedAt`, `rejectionReason`; sends notification email placeholder
-- [ ] Create `AgencyRegistrationController`
-  - [ ] `POST /api/v1/agencies/register` — public, no auth
-  - [ ] `GET /api/v1/admin/agencies/registrations` — `SUPER_ADMIN` only, filterable by status
-  - [ ] `GET /api/v1/admin/agencies/registrations/{id}` — `SUPER_ADMIN` only
-  - [ ] `POST /api/v1/admin/agencies/registrations/{id}/approve` — `SUPER_ADMIN` only
-  - [ ] `POST /api/v1/admin/agencies/registrations/{id}/reject` — `SUPER_ADMIN` only, body: `{ rejectionReason }`
+- [x] Create `AgencyRegistrationStatus` enum (`PENDING`, `APPROVED`, `REJECTED`)
+- [x] Create `AgencyRegistration` entity — `agencyName`, `rcNumber`, `iceNumber`, `ifNumber`, `patent`, `city`, `address`, `website`, `ownerFirstName`, `ownerlastName`, `ownerEmail`, `ownerPhone`, `status`, `rejectionReason`, `submittedAt`, `reviewedAt`, `reviewedBy`, `resolvedAgencyId`
+- [x] Create `AgencyRegistrationRepository` — `findAllByStatus`, `existsByRcNumber`, `existsByIceNumber`, `existsByOwnerEmail`
+- [x] Create `SubmitRegistrationRequest` DTO — `agencyName`, `rcNumber`, `iceNumber`, `ifNumber` (opt), `patent` (opt), `city`, `address` (opt), `website` (opt), `ownerFirstName`, `ownerlastName`, `ownerEmail`, `ownerPhone`
+- [x] Create `AgencyRegistrationResponse` DTO
+- [x] Create `AgencyRegistrationService` — `submit`, `approve`, `reject`, `getAll`, `get`
+- [x] Implement `submit` — validates uniqueness of `rcNumber`, `iceNumber`, `ownerEmail`; creates `AgencyRegistration` with `status=PENDING` and `submittedAt`
+- [x] Implement `approve` — within a single `@Transactional`: creates `Agency` (status=APPROVED, approvedAt=now, slug generated) + creates `User` (role=AGENCY_OWNER, agencySlug set) + calls `TenantSchemaProvisioner` + sets registration `status=APPROVED`, `reviewedAt`, `resolvedAgencyId`; sends welcome email placeholder
+- [x] Implement `reject` — sets registration `status=REJECTED`, `reviewedAt`, `rejectionReason`; sends notification email placeholder
+- [x] Create `AgencyRegistrationController`
+  - [x] `POST /api/v1/agencies/register` — public, no auth
+  - [x] `GET /api/v1/admin/agencies/registrations` — `SUPER_ADMIN` only, filterable by status
+  - [x] `GET /api/v1/admin/agencies/registrations/{id}` — `SUPER_ADMIN` only
+  - [x] `POST /api/v1/admin/agencies/registrations/{id}/approve` — `SUPER_ADMIN` only
+  - [x] `POST /api/v1/admin/agencies/registrations/{id}/reject` — `SUPER_ADMIN` only, body: `{ rejectionReason }`
 
 ### 3.2 `Agency` — approved tenant entity
 
-- [ ] *(update)* `Agency` entity — remove `submittedAt`, `rejectedAt`, `rejectionReason`; change `status` default to `APPROVED`; mark `approvedAt` NOT NULL; add `plan` (FK → `subscription_plans.id`)
-- [ ] *(update)* `AgencyStatus` enum — only `APPROVED` and `BLOCKED`
-- [ ] Create `AgencyRepository` — `findBySlug`, `findByEmail`, `findAllByStatus`
-- [ ] Create `SlugGenerator` utility — converts agency name to a URL/schema-safe slug (lowercase, dashes, deduplication suffix if collision)
-- [ ] Create `AgencyResponse` + `AgencyDetailResponse` DTOs
-- [ ] Create `AgencyService` — `block`, `unblock`, `getAll`, `get`
-- [ ] Implement `block` — sets `BLOCKED`; tenant middleware returns `403` for any request bearing this agency's slug
-- [ ] Create `AgencyController`
-  - [ ] `GET /api/v1/admin/agencies` — `SUPER_ADMIN` only, filterable by status
-  - [ ] `GET /api/v1/admin/agencies/{id}` — `SUPER_ADMIN` only
-  - [ ] `POST /api/v1/admin/agencies/{id}/block` — `SUPER_ADMIN` only
-  - [ ] `POST /api/v1/admin/agencies/{id}/unblock` — `SUPER_ADMIN` only
+- [x] *(update)* `Agency` entity — remove `submittedAt`, `rejectedAt`, `rejectionReason`; change `status` default to `APPROVED`; mark `approvedAt` NOT NULL; add `plan` (FK → `subscription_plans.id`)
+- [x] *(update)* `AgencyStatus` enum — only `APPROVED` and `BLOCKED`
+- [x] Create `AgencyRepository` — `findBySlug`, `findByEmail`, `findAllByStatus`
+- [x] Create `SlugGenerator` utility — converts agency name to a URL/schema-safe slug (lowercase, dashes, deduplication suffix if collision)
+- [x] Create `AgencyResponse` + `AgencyDetailResponse` DTOs
+- [x] Create `AgencyService` — `block`, `unblock`, `getAll`, `get`
+- [x] Implement `block` — sets `BLOCKED`; tenant middleware returns `403` for any request bearing this agency's slug
+- [x] Create `AgencyController`
+  - [x] `GET /api/v1/admin/agencies` — `SUPER_ADMIN` only, filterable by status
+  - [x] `GET /api/v1/admin/agencies/{id}` — `SUPER_ADMIN` only
+  - [x] `POST /api/v1/admin/agencies/{id}/block` — `SUPER_ADMIN` only
+  - [x] `POST /api/v1/admin/agencies/{id}/unblock` — `SUPER_ADMIN` only
 
 ---
 
@@ -264,7 +264,7 @@ Created alongside each reservation; managed through the deposit lifecycle.
 All generation runs off the main HTTP thread via `@Async`.
 
 - [ ] Implement `PdfGenerationService` using an HTML-to-PDF library (e.g., Flying Saucer / OpenPDF)
-- [ ] Design rental contract HTML template — A4 layout, fields: agency ICE / IF / Patente / RC, customer identity, vehicle details, rental period, amounts, digital signature in footer
+- [ ] Design rental contract HTML template — A4 layout, fields: agency ICE / IF / Patent / RC, customer identity, vehicle details, rental period, amounts, digital signature in footer
 - [ ] Implement `ContractPdfService.generateAsync(reservationId)` — renders template, writes file, updates reservation with PDF URL
 - [ ] Design customer invoice HTML template — A4, itemised totals, agency tax identifiers
 - [ ] Implement `InvoicePdfService.generateAsync(reservationId)` — triggered on `Reservation.close`
@@ -295,7 +295,7 @@ Centralised quota guard called from Branch, Hub, and Vehicle service layers.
 | ------- | ----- | ---- | --------- |
 | 1. Multi-Tenancy Infrastructure | 8 | 5 | 3 |
 | 2. Auth & Security | 10 | 10 | 0 |
-| 3. Agency Registration & Management | 25 | 2 | 23 |
+| 3. Agency Registration & Management | 25 | 25 | 0 |
 | 4. Subscription & Billing | 15 | 0 | 15 |
 | 5. Catalog — Updates & Extensions | 17 | 9 | 8 |
 | 6. Fleet — Updates to Existing Code | 10 | 8 | 2 |
@@ -305,4 +305,4 @@ Centralised quota guard called from Branch, Hub, and Vehicle service layers.
 | 10. Signatures & Contract Compliance | 3 | 0 | 3 |
 | 11. Document Generation | 9 | 0 | 9 |
 | 12. Plan Quota Enforcement | 6 | 0 | 6 |
-| **Total** | **142** | **34** | **108** |
+| **Total** | **142** | **57** | **85** |

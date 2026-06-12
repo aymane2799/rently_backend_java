@@ -30,26 +30,26 @@ All entities extend this `@MappedSuperclass`. Never mapped to its own table.
 
 A tenant organisation (car rental agency). Created atomically when an `AgencyRegistration` (§2.15) is approved; never exists in a pending state. `slug` is derived from the agency name and doubles as the PostgreSQL schema name for tenant routing.
 
-| Field            | Type           | Column             | Constraints / Default                    |
-|------------------| -------------- |--------------------| ---------------------------------------- |
-| `name`           | `String`       | `name`             | NOT NULL, UNIQUE                         |
-| `slug`           | `String`       | `slug`             | NOT NULL, UNIQUE — tenant schema key     |
-| `rcNumber`       | `String`       | `rc_number`        | NOT NULL, UNIQUE                         |
-| `iceNumber`      | `String`       | `ice_number`       | NOT NULL, UNIQUE                         |
-| `ifNumber`       | `String`       | `if_number`        | nullable, UNIQUE                         |
-| `patente`        | `String`       | `patente`          | nullable, UNIQUE                         |
+| Field           | Type           | Column            | Constraints / Default                    |
+|-----------------| -------------- |-------------------| ---------------------------------------- |
+| `name`          | `String`       | `name`            | NOT NULL, UNIQUE                         |
+| `slug`          | `String`       | `slug`            | NOT NULL, UNIQUE — tenant schema key     |
+| `rcNumber`      | `String`       | `rc_number`       | NOT NULL, UNIQUE                         |
+| `iceNumber`     | `String`       | `ice_number`      | NOT NULL, UNIQUE                         |
+| `ifNumber`      | `String`       | `if_number`       | nullable, UNIQUE                         |
+| `patent`        | `String`       | `patent`          | nullable, UNIQUE                         |
 | `ownerFirstName` | `String`       | `owner_first_name` | NOT NULL                                 |
-| `ownerLastName`  | `String`       | `owner_last_name`  | NOT NULL                                 |
-| `phone`          | `String`       | `phone`            | NOT NULL                                 |
-| `email`          | `String`       | `email`            | NOT NULL, UNIQUE                         |
-| `city`           | `String`       | `city`             | NOT NULL                                 |
-| `address`        | `String`       | `address`          | nullable                                 |
-| `website`        | `String`       | `website`          | nullable                                 |
-| `logo`           | `String`       | `logo`             | nullable — file path / URL               |
-| `coverImage`     | `String`       | `cover_image`      | nullable — file path / URL               |
-| `status`         | `AgencyStatus` | `status`           | NOT NULL, STRING enum, default `APPROVED` |
-| `approvedAt`     | `Instant`      | `approved_at`      | NOT NULL — set when `AgencyRegistration` is approved |
-| `plan`           | `SubscriptionPlan` | `plan_id`          | nullable, FK → `subscription_plans.id` — assigned on approval |
+| `ownerLastName` | `String`       | `owner_last_name` | NOT NULL                                 |
+| `phone`         | `String`       | `phone`           | NOT NULL                                 |
+| `email`         | `String`       | `email`           | NOT NULL, UNIQUE                         |
+| `city`          | `String`       | `city`            | NOT NULL                                 |
+| `address`       | `String`       | `address`         | nullable                                 |
+| `website`       | `String`       | `website`         | nullable                                 |
+| `logo`          | `String`       | `logo`            | nullable — file path / URL               |
+| `coverImage`    | `String`       | `cover_image`     | nullable — file path / URL               |
+| `status`        | `AgencyStatus` | `status`          | NOT NULL, STRING enum, default `APPROVED` |
+| `approvedAt`    | `Instant`      | `approved_at`     | NOT NULL — set when `AgencyRegistration` is approved |
+| `plan`          | `SubscriptionPlan` | `plan_id`         | nullable, FK → `subscription_plans.id` — assigned on approval |
 
 **State machine**
 
@@ -448,25 +448,25 @@ Full payment and deposit breakdown for a single reservation (AC-4.1, AC-4.2). On
 
 A pending application to onboard a new agency, submitted publicly without authentication. Holds all agency and owner information needed to bootstrap both the `Agency` and the `AGENCY_OWNER` `User` on approval. On admin approval these two records are created atomically, the registration is marked `APPROVED`, and `resolvedAgencyId` is populated — making the registration a permanent audit trail of the original application.
 
-| Field              | Type                       | Column               | Constraints / Default                                          |
-|--------------------| -------------------------- |----------------------| -------------------------------------------------------------- |
-| `agencyName`       | `String`                   | `agency_name`        | NOT NULL                                                       |
-| `rcNumber`         | `String`                   | `rc_number`          | NOT NULL, UNIQUE                                               |
-| `iceNumber`        | `String`                   | `ice_number`         | NOT NULL, UNIQUE                                               |
-| `ifNumber`         | `String`                   | `if_number`          | nullable                                                       |
-| `patente`          | `String`                   | `patente`            | nullable                                                       |
-| `city`             | `String`                   | `city`               | NOT NULL                                                       |
-| `address`          | `String`                   | `address`            | nullable                                                       |
-| `website`          | `String`                   | `website`            | nullable                                                       |
-| `ownerFirstName`   | `String`                   | `owner_first_name`   | NOT NULL                                                       |
-| `ownerLastName`    | `String`                   | `owner_last_name`    | NOT NULL                                                       |
-| `ownerEmail`       | `String`                   | `owner_email`        | NOT NULL, UNIQUE                                               |
-| `ownerPhone`       | `String`                   | `owner_phone`        | NOT NULL                                                       |
-| `status`           | `AgencyRegistrationStatus` | `status`             | NOT NULL, STRING enum, default `PENDING`                       |
-| `rejectionReason`  | `String`                   | `rejection_reason`   | nullable, TEXT                                                 |
-| `submittedAt`      | `Instant`                  | `submitted_at`       | NOT NULL — set on submission                                   |
-| `reviewedAt`       | `Instant`                  | `reviewed_at`        | nullable — set on approve or reject                            |
-| `reviewedBy`       | `String`                   | `reviewed_by`        | nullable — UUID of the admin `User`                            |
+| Field             | Type                       | Column              | Constraints / Default                                          |
+|-------------------| -------------------------- |---------------------| -------------------------------------------------------------- |
+| `agencyName`      | `String`                   | `agency_name`       | NOT NULL                                                       |
+| `rcNumber`        | `String`                   | `rc_number`         | NOT NULL, UNIQUE                                               |
+| `iceNumber`       | `String`                   | `ice_number`        | NOT NULL, UNIQUE                                               |
+| `ifNumber`        | `String`                   | `if_number`         | nullable                                                       |
+| `patent`          | `String`                   | `patent`            | nullable                                                       |
+| `city`            | `String`                   | `city`              | NOT NULL                                                       |
+| `address`         | `String`                   | `address`           | nullable                                                       |
+| `website`         | `String`                   | `website`           | nullable                                                       |
+| `ownerFirstName`  | `String`                   | `owner_first_name`  | NOT NULL                                                       |
+| `ownerLastName`   | `String`                   | `owner_last_name`   | NOT NULL                                                       |
+| `ownerEmail`      | `String`                   | `owner_email`       | NOT NULL, UNIQUE                                               |
+| `ownerPhone`      | `String`                   | `owner_phone`       | NOT NULL                                                       |
+| `status`          | `AgencyRegistrationStatus` | `status`            | NOT NULL, STRING enum, default `PENDING`                       |
+| `rejectionReason` | `String`                   | `rejection_reason`  | nullable, TEXT                                                 |
+| `submittedAt`     | `Instant`                  | `submitted_at`      | NOT NULL — set on submission                                   |
+| `reviewedAt`      | `Instant`                  | `reviewed_at`       | nullable — set on approve or reject                            |
+| `reviewedBy`      | `String`                   | `reviewed_by`       | nullable — UUID of the admin `User`                            |
 | `resolvedAgencyId` | `String`                   | `resolved_agency_id` | nullable — UUID of the created `Agency` on approval            |
 
 **State machine**
@@ -646,7 +646,7 @@ Full entity boxes:
 │          AgencyRegistration          │
 │──────────────────────────────────────│
 │ agencyName / rcNumber / iceNumber    │
-│ ifNumber / patente / city / address  │
+│ ifNumber / patent / city / address   │
 │ website                              │
 │ ownerFirstName / ownerLastName /     │
 │  ownerEmail                          │
@@ -663,7 +663,7 @@ Full entity boxes:
 │────────────────────────────│    │──────────────────────────────────│
 │ name / slug                │    │ code (e.g. SAFI, CHAMIL)         │
 │ rcNumber / iceNumber       │    │ displayName / description        │
-│ ifNumber / patente         │    │ priceMonthly / priceYearly       │
+│ ifNumber / patent          │    │ priceMonthly / priceYearly       │
 │ phone                      │    │ maxBranches / maxHubs            │
 │ email / city               │    │ maxVehicles / isActive           │
 │ status (AgencyStatus)      │    └──────────────┬───────────────────┘

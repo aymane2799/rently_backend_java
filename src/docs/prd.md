@@ -17,7 +17,7 @@ Corporate owners operating simultaneous hubs (e.g., Casablanca Mohamed V Airport
 Vehicles are rarely stationed directly outside the rental desk. They occupy spaces across public airport infrastructure, transit terminals (e.g., Casa-Voyageurs, Rabat-Agdal), or separate compound lots. Without mapping the physical layout down to explicit parking slots, counter staff lose hours daily cross-calling to locate vehicle keys and coordinates.
 
 **Document and Payment Leakage**
-Security deposits (la caution) and cash payments are recorded haphazardly on paper logbooks, leading to major reconciliation and shrink issues. Additionally, manually drafting legal contracts reflecting local compliance norms (Patente, ICE, IF, and RC) is highly repetitive and exposes business owners to severe tax and regulatory audit liabilities.
+Security deposits (la caution) and cash payments are recorded haphazardly on paper logbooks, leading to major reconciliation and shrink issues. Additionally, manually drafting legal contracts reflecting local compliance norms (patent, ICE, IF, and RC) is highly repetitive and exposes business owners to severe tax and regulatory audit liabilities.
 
 - **Strategic Position Note (Asset Protection vs. Tax Burden):** KiraDrive must be framed entirely as an internal **asset security, parking control, and logistics tracking engine** rather than a strict accounting/tax compliance application. This explicitly accommodates the cash-heavy, informal transaction preference typical of independent Moroccan agencies.
 
@@ -75,12 +75,12 @@ Security deposits (la caution) and cash payments are recorded haphazardly on pap
 
 **User Stories**
 
-- As a Tenant Owner, I want the system to instantly generate localized, print-ready PDF rental agreements and commercial invoices including our official regional identification numbers (ICE, Patente, IF, RC), so that we remain fully audit-compliant.
+- As a Tenant Owner, I want the system to instantly generate localized, print-ready PDF rental agreements and commercial invoices including our official regional identification numbers (ICE, patent, IF, RC), so that we remain fully audit-compliant.
 - As a Tenant Owner, I want to download our official platform-to-tenant SaaS subscription invoices within my settings tab as soon as our manual payment transfer is cleared by the platform admin.
 
 **Acceptance Criteria**
 
-- **AC-3.1** — Customer invoices must render in a clean, standard A4 layout using an HTML-to-PDF template component. The PDF header must parse and display all corporate identifiers: ICE, IF, Patente, and RC.
+- **AC-3.1** — Customer invoices must render in a clean, standard A4 layout using an HTML-to-PDF template component. The PDF header must parse and display all corporate identifiers: ICE, IF, patent, and RC.
 - **AC-3.2** — System-to-Tenant subscription PDFs must compile immediately when the Super-Admin flags a subscription period as "Paid". The document must state the payment mode, subscription period, and tier type, exposed via a permanent download link in the Tenant Settings UI.
 
 ---
@@ -110,7 +110,7 @@ Security deposits (la caution) and cash payments are recorded haphazardly on pap
     - `PENDING`: Both signature parameters evaluate as false.
     - `PARTIAL_EXECUTION`: Only one tracking parameter evaluates as true.
     - `FULLY_EXECUTED`: Both digital signing and physical contract printing states are validated true.
-  - **AC-5.4:** When executing physical print actions, the system must render the digital signature vector cleanly inside the PDF footer block adjacent to the required tenant tax variables (**ICE, Patente**).
+  - **AC-5.4:** When executing physical print actions, the system must render the digital signature vector cleanly inside the PDF footer block adjacent to the required tenant tax variables (**ICE, patent**).
 
 ---
 

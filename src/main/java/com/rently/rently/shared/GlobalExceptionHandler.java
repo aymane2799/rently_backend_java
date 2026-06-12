@@ -40,4 +40,10 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleBadRequest(IllegalArgumentException e) {
         return ErrorResponse.of(e.getMessage(), HttpStatus.BAD_REQUEST.value());
     }
+
+    @ExceptionHandler(IllegalStateException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleIllegalState(IllegalStateException e) {
+        return ErrorResponse.of(e.getMessage(), HttpStatus.CONFLICT.value());
+    }
 }
