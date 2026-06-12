@@ -27,7 +27,7 @@ Security deposits (la caution) and cash payments are recorded haphazardly on pap
 
 | Role                   | Operational Scope                                                                                        | Access Bounds                                                                                                               |
 | ---------------------- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| **Master Super-Admin** | Platform owner oversight; manages system health, tenant activation, and global tier adjustments.         | Master system panel; can flag any tenant status to "Paid". Cannot read customer-identifiable data inside any tenant schema. |
+| **Super-Admin** | Platform owner oversight; manages system health, tenant activation, and global tier adjustments.         | Master system panel; can flag any tenant status to "Paid". Cannot read customer-identifiable data inside any tenant schema. |
 | **Tenant Owner**       | Agency business owner. Full control over corporate configurations, entire regional fleets, and staffing. | Unrestricted schema access, multi-branch revenue data, user configuration matrices.                                         |
 | **Branch Manager**     | Regional operations supervisor. Monitors assets, processes exceptions, tracks local staff activity.      | Restricted to the assigned physical branch data pool and regional parking hubs.                                             |
 | **Desk Counter Agent** | Frontline operator. Executes bookings, check-ins, and parking slot logging.                              | Single-branch operational dashboard; access to reservation wizard and asset directory. Denied access to system settings.    |
@@ -81,7 +81,7 @@ Security deposits (la caution) and cash payments are recorded haphazardly on pap
 **Acceptance Criteria**
 
 - **AC-3.1** — Customer invoices must render in a clean, standard A4 layout using an HTML-to-PDF template component. The PDF header must parse and display all corporate identifiers: ICE, IF, Patente, and RC.
-- **AC-3.2** — System-to-Tenant subscription PDFs must compile immediately when the Master Super-Admin flags a subscription period as "Paid". The document must state the payment mode, subscription period, and tier type, exposed via a permanent download link in the Tenant Settings UI.
+- **AC-3.2** — System-to-Tenant subscription PDFs must compile immediately when the Super-Admin flags a subscription period as "Paid". The document must state the payment mode, subscription period, and tier type, exposed via a permanent download link in the Tenant Settings UI.
 
 ---
 
@@ -152,7 +152,7 @@ Due to credit card billing friction common among small businesses in Morocco, au
                    │
                    ▼
 ┌─────────────────────────────────────┐
-│  Master Admin verifies receipt &    │
+│  Super Admin verifies receipt &    │
 │  switches Tenant status to PAID     │
 └──────────────────┬──────────────────┘
                    │
@@ -174,23 +174,23 @@ Due to credit card billing friction common among small businesses in Morocco, au
 
 ### Module 3.6 — Agency Self-Registration & Admin Approval
 
-**Problem:** Platform onboarding is entirely manual today — the Master Super-Admin creates tenant accounts ad-hoc. This creates a bottleneck as the platform scales and leaves prospective agency owners with no structured intake path.
+**Problem:** Platform onboarding is entirely manual today — the Super-Admin creates tenant accounts ad-hoc. This creates a bottleneck as the platform scales and leaves prospective agency owners with no structured intake path.
 
 **User Stories**
 
 - As a prospective Agency Owner, I want to submit a self-service registration form with my agency's business details, so that I can request access to the platform without waiting for a direct admin call.
-- As a Master Super-Admin, I want to see a dashboard of all pending registration requests and individually approve or reject each one with an optional rejection reason, so that I can vet agencies before granting full system access.
+- As a Super-Admin, I want to see a dashboard of all pending registration requests and individually approve or reject each one with an optional rejection reason, so that I can vet agencies before granting full system access.
 - As a prospective Agency Owner, I want to receive a clear status update (approved or rejected) after my registration is reviewed, so that I know whether to proceed with onboarding or address the stated issues.
 
 **Acceptance Criteria**
 
-- **AC-6.1** — The public-facing registration form must collect: Agency Legal Name, RC Number (Registre de Commerce), ICE Number, Owner Full Name, Business Email, Phone Number, City, and optional Website URL. All fields except Website are mandatory.
+- **AC-6.1** — The public-facing registration form must collect: Agency Legal Name, RC Number (Registre de Commerce), ICE Number, Owner First Name, Owner Last Name, Business Email, Phone Number, City, and optional Website URL. All fields except Website are mandatory.
 - **AC-6.2** — Upon submission, the system must create an `Agency` record with `status = PENDING` and timestamp the `submittedAt` field. The agency must not gain any operational system access while in `PENDING` state.
-- **AC-6.3** — The Master Super-Admin's registration queue must display all `PENDING` agencies sorted by `submittedAt` ascending (oldest first). Each row must surface: Agency Name, RC Number, ICE Number, Email, City, and time elapsed since submission.
+- **AC-6.3** — The Super-Admin's registration queue must display all `PENDING` agencies sorted by `submittedAt` ascending (oldest first). Each row must surface: Agency Name, RC Number, ICE Number, Email, City, and time elapsed since submission.
 - **AC-6.4** — Approving an agency must atomically: set `status = APPROVED`, record `approvedAt` timestamp, provision the tenant's isolated database schema, and trigger a welcome email to the registered business email with first-login credentials.
 - **AC-6.5** — Rejecting an agency must: set `status = REJECTED`, record `rejectedAt` timestamp, and persist a mandatory `rejectionReason` string. A notification email must be dispatched to the applicant with the stated reason and an invitation to re-apply.
 - **AC-6.6** — A rejected agency may re-submit a new registration request. The system must retain the previous rejected record for audit history and create a fresh `PENDING` record upon re-submission.
-- **AC-6.7** — An approved agency that later violates platform terms may be set to `BLOCKED` by the Master Super-Admin. A `BLOCKED` agency loses all API access and its tenant staff receive an in-app banner notification.
+- **AC-6.7** — An approved agency that later violates platform terms may be set to `BLOCKED` by the Super-Admin. A `BLOCKED` agency loses all API access and its tenant staff receive an in-app banner notification.
 
 **Registration State Machine**
 

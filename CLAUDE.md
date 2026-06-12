@@ -2,6 +2,17 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Implementation Tracking
+
+**After completing any task from `src/docs/implementation_plan.md`**, update that file immediately:
+
+1. Flip the checkbox: `- [ ]` → `- [x]`
+2. Update the **Progress Summary** table at the bottom — increment `Done`, decrement `Remaining` for the affected section.
+
+Do this as the final step of every implementation session, before reporting the work as done.
+
+---
+
 ## Documentation Reference
 
 All design documents live under `src/docs/`. Read the relevant file before implementing anything in its domain.
@@ -81,7 +92,7 @@ Each sub-package is self-contained: entity, repository, service interface + impl
 ## Multi-Tenancy Infrastructure
 
 - `TenantFilter` — servlet filter; reads `X-Tenant-ID` header, populates `TenantContext` (thread-local)
-- `CurrentTenantIdentifierResolver` — reads from `TenantContext`; null for `MASTER_SUPER_ADMIN` requests
+- `CurrentTenantIdentifierResolver` — reads from `TenantContext`; null for `SUPER_ADMIN` requests
 - `MultiTenantConnectionProvider` — switches JDBC connection `search_path` per request
 - `TenantSchemaProvisioner` — runs `CREATE SCHEMA IF NOT EXISTS <slug>` + DDL for all tenant tables; called atomically inside `AgencyRegistrationService.approve`
 
@@ -161,7 +172,7 @@ Reservation >── Vehicle
 
 | Role | `agencySlug` | Scope |
 |---|---|---|
-| `MASTER_SUPER_ADMIN` | null | Platform-level; accesses admin endpoints; skips tenant routing |
+| `SUPER_ADMIN` | null | Platform-level; accesses admin endpoints; skips tenant routing |
 | `AGENCY_OWNER` | set | Full agency access; manages staff and subscription |
 | `BRANCH_MANAGER` | set | Scoped to one branch (`branchId` stored on User) |
 | `AGENT` | set | Scoped to one branch; creates reservations |
@@ -197,7 +208,7 @@ On approval (single `@Transactional`): creates `Agency`, creates owner `User` (r
 ## API Conventions
 
 - Base path: `/api/v1/`
-- Admin endpoints: `/api/v1/admin/` (`MASTER_SUPER_ADMIN` only)
+- Admin endpoints: `/api/v1/admin/` (`SUPER_ADMIN` only)
 - `POST` → `201 CREATED` returning the created resource
 - `PATCH` → `204 NO_CONTENT`
 - `DELETE` / deactivate → `204 NO_CONTENT`

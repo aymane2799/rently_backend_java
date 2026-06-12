@@ -826,14 +826,14 @@ After approval, the `AgencyRegistration` row remains with `status = APPROVED` an
 
 ## 25. SubscriptionPlan as a Managed Entity (not an Enum)
 
-**What we chose:** `SubscriptionPlan` is a JPA entity (`@Entity`) backed by the `subscription_plans` table, managed by the Master Super-Admin through a CRUD API. It is seeded at startup with two default plans (`SAFI`, `CHAMIL`) but can be extended or modified at runtime without code changes.
+**What we chose:** `SubscriptionPlan` is a JPA entity (`@Entity`) backed by the `subscription_plans` table, managed by the Super-Admin through a CRUD API. It is seeded at startup with two default plans (`SAFI`, `CHAMIL`) but can be extended or modified at runtime without code changes.
 
 **Why an entity and not a Java enum:**
 
 The original design had `SubscriptionPlan` as an enum with hardcoded quota values. The problem is that business decisions about pricing and plan limits should not require a code deployment to change. If the product team wants to add a third tier, adjust the vehicle limit of `SAFI`, or change the monthly price of `CHAMIL`, they should be able to do that in a database record — not in a pull request.
 
 Making it an entity also enables:
-- **Admin UI** — a full CRUD API for plan management, accessible to the Master Super-Admin.
+- **Admin UI** — a full CRUD API for plan management, accessible to the Super-Admin.
 - **Soft-deactivation** — old plans can be set `isActive = false` without losing historical subscription data that references them.
 - **Audit trail** — `createdAt` / `updatedAt` from `Auditable` show when plan parameters changed.
 
@@ -855,7 +855,7 @@ Making it an entity also enables:
 
 ## 26. Manual Payment Flow & Subscription Lifecycle
 
-**What we chose:** No payment gateway integration. Agencies pay by bank transfer or Cash Plus (a Moroccan cash payment service). The Master Super-Admin manually verifies the payment receipt and calls `POST /admin/subscriptions/{id}/mark-paid`. This triggers an async invoice PDF generation job.
+**What we chose:** No payment gateway integration. Agencies pay by bank transfer or Cash Plus (a Moroccan cash payment service). The Super-Admin manually verifies the payment receipt and calls `POST /admin/subscriptions/{id}/mark-paid`. This triggers an async invoice PDF generation job.
 
 **Why manual payment and not Stripe/PayPal:**
 
@@ -947,7 +947,7 @@ Not yet implemented, but the design anticipates short-lived access tokens with a
 
 ## 29. Four-Role User Hierarchy
 
-**What we chose:** Four roles — `MASTER_SUPER_ADMIN`, `AGENCY_OWNER`, `BRANCH_MANAGER`, `AGENT` — stored as a `UserRole` enum on the `User` entity.
+**What we chose:** Four roles — `SUPER_ADMIN`, `AGENCY_OWNER`, `BRANCH_MANAGER`, `AGENT` — stored as a `UserRole` enum on the `User` entity.
 
 **Why these four roles:**
 
@@ -955,14 +955,14 @@ The roles map directly to the organisational structure of a car rental agency bu
 
 | Role | Scope | Capabilities |
 |------|-------|-------------|
-| `MASTER_SUPER_ADMIN` | Platform | Manages agencies, plans, registrations; no tenant affiliation |
+| `SUPER_ADMIN` | Platform | Manages agencies, plans, registrations; no tenant affiliation |
 | `AGENCY_OWNER` | Agency | Manages own staff, settings, subscription; sees all branches |
 | `BRANCH_MANAGER` | Branch | Manages vehicles and reservations within one branch |
 | `AGENT` | Branch | Creates reservations, processes payments; read-only on vehicles |
 
-**Why `MASTER_SUPER_ADMIN` has a null `agencySlug`:**
+**Why `SUPER_ADMIN` has a null `agencySlug`:**
 
-The master admin is a platform-level user, not a tenant user. There is no agency to associate them with. `null` is the correct representation — the null check in the `TenantFilter` explicitly skips tenant routing for requests authenticated as `MASTER_SUPER_ADMIN`, allowing them to access the public-schema admin endpoints directly.
+The super admin is a platform-level user, not a tenant user. There is no agency to associate them with. `null` is the correct representation — the null check in the `TenantFilter` explicitly skips tenant routing for requests authenticated as `SUPER_ADMIN`, allowing them to access the public-schema admin endpoints directly.
 
 **Why `BRANCH_MANAGER` and `AGENT` store a `branchId`:**
 

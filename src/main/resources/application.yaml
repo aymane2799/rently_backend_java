@@ -1,23 +1,21 @@
 spring:
   application:
-    name: Rently
+    name: KiraDrive
 
   # JPA / Hibernate
   jpa:
     hibernate:
-      # 'validate' means Hibernate checks that your entity classes match the
-      # database schema at startup. It does NOT create or alter tables.
-      # Flyway manages all schema changes; Hibernate only validates.
       ddl-auto: update
-
-    # Disable OSIV — prevents lazy-loading issues in controllers
     open-in-view: false
+    properties:
+      hibernate:
+        multiTenancy: SCHEMA
 
   # Flyway — database migration tool
   flyway:
     enabled: false
     locations: classpath:db/migration
-    baseline-on-migrate: false # Fresh database; do not baseline
+    baseline-on-migrate: false
 
 # Spring Boot Actuator — which endpoints to expose
 management:
@@ -28,3 +26,8 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+
+# JWT configuration
+jwt:
+  secret: ${JWT_SECRET:kiradrive-default-secret-key-change-in-production-must-be-256-bits}
+  expiration: 86400000   # 24 hours in ms

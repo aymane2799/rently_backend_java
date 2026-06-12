@@ -30,25 +30,26 @@ All entities extend this `@MappedSuperclass`. Never mapped to its own table.
 
 A tenant organisation (car rental agency). Created atomically when an `AgencyRegistration` (§2.15) is approved; never exists in a pending state. `slug` is derived from the agency name and doubles as the PostgreSQL schema name for tenant routing.
 
-| Field             | Type           | Column             | Constraints / Default                    |
-| ----------------- | -------------- | ------------------ | ---------------------------------------- |
-| `name`            | `String`       | `name`             | NOT NULL, UNIQUE                         |
-| `slug`            | `String`       | `slug`             | NOT NULL, UNIQUE — tenant schema key     |
-| `rcNumber`        | `String`       | `rc_number`        | NOT NULL, UNIQUE                         |
-| `iceNumber`       | `String`       | `ice_number`       | NOT NULL, UNIQUE                         |
-| `ifNumber`        | `String`       | `if_number`        | nullable, UNIQUE                         |
-| `patente`         | `String`       | `patente`          | nullable, UNIQUE                         |
-| `ownerFullName`   | `String`       | `owner_full_name`  | NOT NULL                                 |
-| `phone`           | `String`       | `phone`            | NOT NULL                                 |
-| `email`           | `String`       | `email`            | NOT NULL, UNIQUE                         |
-| `city`            | `String`       | `city`             | NOT NULL                                 |
-| `address`         | `String`       | `address`          | nullable                                 |
-| `website`         | `String`       | `website`          | nullable                                 |
-| `logo`            | `String`       | `logo`             | nullable — file path / URL               |
-| `coverImage`      | `String`       | `cover_image`      | nullable — file path / URL               |
-| `status`          | `AgencyStatus` | `status`           | NOT NULL, STRING enum, default `APPROVED` |
-| `approvedAt`      | `Instant`      | `approved_at`      | NOT NULL — set when `AgencyRegistration` is approved |
-| `plan`            | `SubscriptionPlan` | `plan_id`      | nullable, FK → `subscription_plans.id` — assigned on approval |
+| Field            | Type           | Column             | Constraints / Default                    |
+|------------------| -------------- |--------------------| ---------------------------------------- |
+| `name`           | `String`       | `name`             | NOT NULL, UNIQUE                         |
+| `slug`           | `String`       | `slug`             | NOT NULL, UNIQUE — tenant schema key     |
+| `rcNumber`       | `String`       | `rc_number`        | NOT NULL, UNIQUE                         |
+| `iceNumber`      | `String`       | `ice_number`       | NOT NULL, UNIQUE                         |
+| `ifNumber`       | `String`       | `if_number`        | nullable, UNIQUE                         |
+| `patente`        | `String`       | `patente`          | nullable, UNIQUE                         |
+| `ownerFirstName` | `String`       | `owner_first_name` | NOT NULL                                 |
+| `ownerLastName`  | `String`       | `owner_last_name`  | NOT NULL                                 |
+| `phone`          | `String`       | `phone`            | NOT NULL                                 |
+| `email`          | `String`       | `email`            | NOT NULL, UNIQUE                         |
+| `city`           | `String`       | `city`             | NOT NULL                                 |
+| `address`        | `String`       | `address`          | nullable                                 |
+| `website`        | `String`       | `website`          | nullable                                 |
+| `logo`           | `String`       | `logo`             | nullable — file path / URL               |
+| `coverImage`     | `String`       | `cover_image`      | nullable — file path / URL               |
+| `status`         | `AgencyStatus` | `status`           | NOT NULL, STRING enum, default `APPROVED` |
+| `approvedAt`     | `Instant`      | `approved_at`      | NOT NULL — set when `AgencyRegistration` is approved |
+| `plan`           | `SubscriptionPlan` | `plan_id`          | nullable, FK → `subscription_plans.id` — assigned on approval |
 
 **State machine**
 
@@ -72,17 +73,18 @@ APPROVED ──► BLOCKED
 
 **Table:** `users` | **Module:** `auth`
 
-A platform user account. Master Super-Admins have no agency affiliation; all other roles belong to exactly one agency. Branch Managers and Desk Counter Agents are additionally scoped to a branch (recorded as a plain `branchId` string — cross-schema FK to the tenant's `branches` table).
+A platform user account. Super-Admins have no agency affiliation; all other roles belong to exactly one agency. Branch Managers and Desk Counter Agents are additionally scoped to a branch (recorded as a plain `branchId` string — cross-schema FK to the tenant's `branches` table).
 
-| Field          | Type       | Column           | Constraints / Default              |
-| -------------- | ---------- | ---------------- | ---------------------------------- |
-| `fullName`     | `String`   | `full_name`      | NOT NULL                           |
-| `email`        | `String`   | `email`          | NOT NULL, UNIQUE                   |
-| `passwordHash` | `String`   | `password_hash`  | NOT NULL                           |
-| `role`         | `UserRole` | `role`           | NOT NULL, STRING enum              |
-| `agencySlug`   | `String`   | `agency_slug`    | nullable — null for MASTER_SUPER_ADMIN; FK-by-convention to `agencies.slug` |
-| `branchId`     | `String`   | `branch_id`      | nullable — UUID of branch within tenant schema |
-| `isActive`     | `boolean`  | `is_active`      | NOT NULL, default `true`           |
+| Field          | Type       | Column          | Constraints / Default                                                |
+|----------------| ---------- |-----------------|----------------------------------------------------------------------|
+| `firstName`    | `String`   | `first_name`    | NOT NULL                                                             |
+| `lastName`     | `String`   | `last_name`     | NOT NULL                                                             |
+| `email`        | `String`   | `email`         | NOT NULL, UNIQUE                                                     |
+| `passwordHash` | `String`   | `password_hash` | NOT NULL                                                             |
+| `role`         | `UserRole` | `role`          | NOT NULL, STRING enum                                                |
+| `agencySlug`   | `String`   | `agency_slug`   | nullable — null for SUPER_ADMIN; FK-by-convention to `agencies.slug` |
+| `branchId`     | `String`   | `branch_id`     | nullable — UUID of branch within tenant schema                       |
+| `isActive`     | `boolean`  | `is_active`     | NOT NULL, default `true`                                             |
 
 **Relationships**
 
@@ -96,7 +98,7 @@ A platform user account. Master Super-Admins have no agency affiliation; all oth
 
 **Table:** `subscriptions` | **Module:** `billing`
 
-Tracks each subscription period for an agency. A new record is created for every renewal cycle. The Master Super-Admin manually flips `status` to `PAID` after verifying the bank transfer or Cash Plus receipt, which triggers invoice generation.
+Tracks each subscription period for an agency. A new record is created for every renewal cycle. The Super-Admin manually flips `status` to `PAID` after verifying the bank transfer or Cash Plus receipt, which triggers invoice generation.
 
 | Field         | Type               | Column         | Constraints / Default                   |
 | ------------- | ------------------ | -------------- | --------------------------------------- |
@@ -123,7 +125,7 @@ Tracks each subscription period for an agency. A new record is created for every
 
 **Table:** `subscription_plans` | **Module:** `billing`
 
-A configurable plan record managed exclusively by the Master Super-Admin. Replacing the former `SubscriptionPlan` enum allows admins to create new tiers, adjust pricing or quotas, and activate/deactivate plans at runtime without a code deployment. Agencies and subscriptions hold a FK to this entity; quota enforcement reads from it at runtime (cached).
+A configurable plan record managed exclusively by the Super-Admin. Replacing the former `SubscriptionPlan` enum allows admins to create new tiers, adjust pricing or quotas, and activate/deactivate plans at runtime without a code deployment. Agencies and subscriptions hold a FK to this entity; quota enforcement reads from it at runtime (cached).
 
 | Field          | Type         | Column           | Constraints / Default         |
 | -------------- | ------------ | ---------------- | ----------------------------- |
@@ -217,7 +219,7 @@ A vehicle amenity tag (e.g., "GPS", "Heated Seats", "Bluetooth"). Shared across 
 
 **Table:** `catalog_requests` | **Module:** `catalog`
 
-An agency-initiated request to add a new Brand, Model, or Feature to the shared catalog. Reviewed and actioned by the Master Super-Admin. On approval the item is created in the shared catalog and becomes immediately available to all tenants.
+An agency-initiated request to add a new Brand, Model, or Feature to the shared catalog. Reviewed and actioned by the Super-Admin. On approval the item is created in the shared catalog and becomes immediately available to all tenants.
 
 | Field                 | Type                   | Column                  | Constraints / Default                                |
 | --------------------- | ---------------------- | ----------------------- | ---------------------------------------------------- |
@@ -446,25 +448,26 @@ Full payment and deposit breakdown for a single reservation (AC-4.1, AC-4.2). On
 
 A pending application to onboard a new agency, submitted publicly without authentication. Holds all agency and owner information needed to bootstrap both the `Agency` and the `AGENCY_OWNER` `User` on approval. On admin approval these two records are created atomically, the registration is marked `APPROVED`, and `resolvedAgencyId` is populated — making the registration a permanent audit trail of the original application.
 
-| Field               | Type                       | Column               | Constraints / Default                                          |
-| ------------------- | -------------------------- | -------------------- | -------------------------------------------------------------- |
-| `agencyName`        | `String`                   | `agency_name`        | NOT NULL                                                       |
-| `rcNumber`          | `String`                   | `rc_number`          | NOT NULL, UNIQUE                                               |
-| `iceNumber`         | `String`                   | `ice_number`         | NOT NULL, UNIQUE                                               |
-| `ifNumber`          | `String`                   | `if_number`          | nullable                                                       |
-| `patente`           | `String`                   | `patente`            | nullable                                                       |
-| `city`              | `String`                   | `city`               | NOT NULL                                                       |
-| `address`           | `String`                   | `address`            | nullable                                                       |
-| `website`           | `String`                   | `website`            | nullable                                                       |
-| `ownerFullName`     | `String`                   | `owner_full_name`    | NOT NULL                                                       |
-| `ownerEmail`        | `String`                   | `owner_email`        | NOT NULL, UNIQUE                                               |
-| `ownerPhone`        | `String`                   | `owner_phone`        | NOT NULL                                                       |
-| `status`            | `AgencyRegistrationStatus` | `status`             | NOT NULL, STRING enum, default `PENDING`                       |
-| `rejectionReason`   | `String`                   | `rejection_reason`   | nullable, TEXT                                                 |
-| `submittedAt`       | `Instant`                  | `submitted_at`       | NOT NULL — set on submission                                   |
-| `reviewedAt`        | `Instant`                  | `reviewed_at`        | nullable — set on approve or reject                            |
-| `reviewedBy`        | `String`                   | `reviewed_by`        | nullable — UUID of the admin `User`                            |
-| `resolvedAgencyId`  | `String`                   | `resolved_agency_id` | nullable — UUID of the created `Agency` on approval            |
+| Field              | Type                       | Column               | Constraints / Default                                          |
+|--------------------| -------------------------- |----------------------| -------------------------------------------------------------- |
+| `agencyName`       | `String`                   | `agency_name`        | NOT NULL                                                       |
+| `rcNumber`         | `String`                   | `rc_number`          | NOT NULL, UNIQUE                                               |
+| `iceNumber`        | `String`                   | `ice_number`         | NOT NULL, UNIQUE                                               |
+| `ifNumber`         | `String`                   | `if_number`          | nullable                                                       |
+| `patente`          | `String`                   | `patente`            | nullable                                                       |
+| `city`             | `String`                   | `city`               | NOT NULL                                                       |
+| `address`          | `String`                   | `address`            | nullable                                                       |
+| `website`          | `String`                   | `website`            | nullable                                                       |
+| `ownerFirstName`   | `String`                   | `owner_first_name`   | NOT NULL                                                       |
+| `ownerLastName`    | `String`                   | `owner_last_name`    | NOT NULL                                                       |
+| `ownerEmail`       | `String`                   | `owner_email`        | NOT NULL, UNIQUE                                               |
+| `ownerPhone`       | `String`                   | `owner_phone`        | NOT NULL                                                       |
+| `status`           | `AgencyRegistrationStatus` | `status`             | NOT NULL, STRING enum, default `PENDING`                       |
+| `rejectionReason`  | `String`                   | `rejection_reason`   | nullable, TEXT                                                 |
+| `submittedAt`      | `Instant`                  | `submitted_at`       | NOT NULL — set on submission                                   |
+| `reviewedAt`       | `Instant`                  | `reviewed_at`        | nullable — set on approve or reject                            |
+| `reviewedBy`       | `String`                   | `reviewed_by`        | nullable — UUID of the admin `User`                            |
+| `resolvedAgencyId` | `String`                   | `resolved_agency_id` | nullable — UUID of the created `Agency` on approval            |
 
 **State machine**
 
@@ -554,14 +557,14 @@ Values: `PENDING` · `APPROVED` · `REJECTED`
 Used by: `AgencyRegistration.status`
 
 **`UserRole`**
-Values: `MASTER_SUPER_ADMIN` · `AGENCY_OWNER` · `BRANCH_MANAGER` · `AGENT`
+Values: `SUPER_ADMIN` · `AGENCY_OWNER` · `BRANCH_MANAGER` · `AGENT`
 Used by: `User.role`
 
 **`SubscriptionStatus`**
 Values: `PENDING_PAYMENT` · `ACTIVE` · `EXPIRED` · `SUSPENDED`
 Used by: `Subscription.status`
 
-> `SubscriptionPlan` is now a **managed entity** (§2.4), not an enum. Plan codes (`SAFI`, `CHAMIL`, etc.) are stored in the `subscription_plans` table and configurable by the Master Super-Admin.
+> `SubscriptionPlan` is now a **managed entity** (§2.4), not an enum. Plan codes (`SAFI`, `CHAMIL`, etc.) are stored in the `subscription_plans` table and configurable by the Super-Admin.
 
 ---
 
@@ -645,7 +648,8 @@ Full entity boxes:
 │ agencyName / rcNumber / iceNumber    │
 │ ifNumber / patente / city / address  │
 │ website                              │
-│ ownerFullName / ownerEmail           │
+│ ownerFirstName / ownerLastName /     │
+│  ownerEmail                          │
 │ ownerPhone                           │
 │ status (AgencyRegistrationStatus)    │
 │ rejectionReason                      │
@@ -660,7 +664,7 @@ Full entity boxes:
 │ name / slug                │    │ code (e.g. SAFI, CHAMIL)         │
 │ rcNumber / iceNumber       │    │ displayName / description        │
 │ ifNumber / patente         │    │ priceMonthly / priceYearly       │
-│ ownerFullName / phone      │    │ maxBranches / maxHubs            │
+│ phone                      │    │ maxBranches / maxHubs            │
 │ email / city               │    │ maxVehicles / isActive           │
 │ status (AgencyStatus)      │    └──────────────┬───────────────────┘
 │ approvedAt                 │                   │ 1
@@ -679,7 +683,8 @@ Full entity boxes:
               ┌──────────────▼───────────────────┐
               │               User               │
               │──────────────────────────────────│
-              │ fullName / email / passwordHash  │
+              │ firstName / lastName / email /   │
+              │ passwordHash                     │
               │ role (UserRole)                  │
               │ agencySlug (ref, nullable)       │
               │ branchId (UUID ref, nullable)    │
@@ -876,7 +881,7 @@ Because there is no DB FK, a deleted catalog item would leave `model_id` / `feat
 
 ## 7. Plan Quota Enforcement
 
-Quota limits are read from the `SubscriptionPlan` entity (§2.4) at runtime via the agency's `plan_id` FK. The table below reflects the two seed plans; values are DB-configurable by the Master Super-Admin without redeployment.
+Quota limits are read from the `SubscriptionPlan` entity (§2.4) at runtime via the agency's `plan_id` FK. The table below reflects the two seed plans; values are DB-configurable by the Super-Admin without redeployment.
 
 | Constraint      | SAFI (seed) | CHAMIL (seed) | Source field        |
 | --------------- | ----------- | ------------- | ------------------- |
@@ -886,3 +891,152 @@ Quota limits are read from the `SubscriptionPlan` entity (§2.4) at runtime via 
 | Multi-branch UI | Hidden      | Visible       | `maxBranches == 1`  |
 
 > `null` in `maxBranches`, `maxHubs`, or `maxVehicles` means unlimited. Quota checks run server-side before every create on `Branch`, `Hub`, or `Vehicle`. Plans should be cached (e.g., Spring Cache + short TTL) to avoid a DB round-trip on every quota check.
+
+---
+
+## 8. Spring Security & JWT — Authentication Architecture
+
+### 8.1 Login Flow (token issuance)
+
+```
+Client                       AuthController              UserRepository        JwtTokenProvider
+  │                               │                           │                      │
+  │  POST /api/v1/auth/login      │                           │                      │
+  │  { email, password }          │                           │                      │
+  │──────────────────────────────►│                           │                      │
+  │                               │  findByEmail(email)       │                      │
+  │                               │──────────────────────────►│                      │
+  │                               │  User | empty             │                      │
+  │                               │◄──────────────────────────│                      │
+  │                               │                           │                      │
+  │                               │  [guard: user not found]──► 401 UNAUTHORIZED     │
+  │                               │  [guard: user inactive] ──► 401 UNAUTHORIZED     │
+  │                               │  [guard: wrong password]──► 401 UNAUTHORIZED     │
+  │                               │                           │                      │
+  │                               │  generateToken(user)                             │
+  │                               │─────────────────────────────────────────────────►│
+  │                               │  signed JWT                                      │
+  │                               │◄─────────────────────────────────────────────────│
+  │                               │                                                  │
+  │  200 OK                       │                                                  │
+  │  { token, userId, role,       │                                                  │
+  │    agencySlug, branchId }     │                                                  │
+  │◄──────────────────────────────│                                                  │
+```
+
+**JWT payload claims:**
+
+| Claim        | Source                   | Notes                                   |
+| ------------ | ------------------------ | --------------------------------------- |
+| `sub`        | `user.getId()`           | UUID of the `User` record               |
+| `role`       | `user.getRole().name()`  | e.g. `AGENCY_OWNER`                     |
+| `agencySlug` | `user.getAgencySlug()`   | null for `SUPER_ADMIN`           |
+| `branchId`   | `user.getBranchId()`     | null unless `BRANCH_MANAGER` or `AGENT` |
+| `iat`        | issue timestamp          | —                                       |
+| `exp`        | `iat + jwt.expiration`   | configured via `jwt.expiration` (ms)    |
+
+Signed with **HMAC-SHA** using the key derived from `jwt.secret` (application.yaml).
+
+---
+
+### 8.2 Authenticated Request Lifecycle
+
+Every non-login request passes through the following filter chain before reaching a controller:
+
+```
+Incoming HTTP Request
+        │
+        ▼
+┌───────────────────────────────────────────────┐
+│         Spring Security Filter Chain          │
+│                                               │
+│  ┌────────────────────────────────────────┐   │
+│  │  1. TenantFilter  (before Security)    │   │  ← reads X-Tenant-ID header
+│  │     TenantContext.set(tenantId)        │   │    stores slug in thread-local
+│  └────────────────────────────────────────┘   │
+│                    │                          │
+│                    ▼                          │
+│  ┌────────────────────────────────────────┐   │
+│  │  2. JwtAuthenticationFilter            │   │  ← OncePerRequestFilter
+│  │     extends OncePerRequestFilter       │   │
+│  │                                        │   │
+│  │  a) Read Authorization header          │   │
+│  │     missing / not "Bearer " ──────────────► pass-through (anonymous)
+│  │                                        │   │
+│  │  b) JwtTokenProvider.isTokenValid()    │   │
+│  │     invalid / expired ────────────────────► pass-through (anonymous)
+│  │                                        │   │
+│  │  c) extractClaims(token) → subject     │   │
+│  │     (userId UUID)                      │   │
+│  │                                        │   │
+│  │  d) UserRepository.findById(userId)    │   │
+│  │     not found ─────────────────────────────► pass-through (anonymous)
+│  │     user.isActive() == false ──────────────► pass-through (anonymous)
+│  │                                        │   │
+│  │  e) Build UsernamePasswordAuthToken    │   │
+│  │     principal = User entity            │   │
+│  │     authority = "ROLE_" + role         │   │
+│  │     SecurityContextHolder.set(auth)    │   │
+│  └────────────────────────────────────────┘   │
+│                    │                          │
+│                    ▼                          │
+│  ┌────────────────────────────────────────┐   │
+│  │  3. UsernamePasswordAuthenticationFilter│  │  ← skipped (stateless; JWT
+│  │     (standard Spring, bypassed here)   │   │     filter runs before this)
+│  └────────────────────────────────────────┘   │
+│                    │                          │
+│                    ▼                          │
+│  ┌────────────────────────────────────────┐   │
+│  │  4. Authorization (SecurityConfig)     │   │
+│  │                                        │   │
+│  │  /api/v1/auth/**           → permitAll │   │
+│  │  POST /api/v1/agencies/register→permitAll  │
+│  │  /api/v1/admin/**          →  SUPER_ADMIN  │
+│  │  anyRequest                → authenticated │
+│  └────────────────────────────────────────┘   │
+└───────────────────────────────────────────────┘
+        │
+        ▼
+  Controller method
+  (principal available via SecurityContextHolder
+   or injected as method parameter)
+        │
+        ▼
+  Response returned; TenantFilter clears TenantContext
+```
+
+---
+
+### 8.3 Filter Registration Order
+
+| Order | Filter | Registered via |
+| ----- | ------ | -------------- |
+| 1 | `TenantFilter` | `@Component` + `OncePerRequestFilter` (auto-registered by Spring Boot) |
+| 2 | `JwtAuthenticationFilter` | `addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)` in `SecurityConfig` |
+| 3 | `UsernamePasswordAuthenticationFilter` | Spring Security default (effectively unused — stateless) |
+
+> Session creation policy is `STATELESS` — Spring Security never creates an `HttpSession`. Every request is fully authenticated from the token alone.
+
+---
+
+### 8.4 Endpoint Access Matrix
+
+| Endpoint pattern | Auth required | Role constraint | Notes |
+| ---------------- | ------------- | --------------- | ----- |
+| `POST /api/v1/auth/login` | No | — | Token issuance |
+| `POST /api/v1/agencies/register` | No | — | Public agency registration form |
+| `/api/v1/admin/**` | Yes | `SUPER_ADMIN` | `hasRole()` enforced by `SecurityConfig` |
+| All other `/api/v1/**` | Yes | Any authenticated user | Fine-grained roles via `@PreAuthorize` / `@EnableMethodSecurity` |
+
+---
+
+### 8.5 Key Components
+
+| Component | Location | Responsibility |
+| --------- | -------- | -------------- |
+| `JwtTokenProvider` | `auth/jwt/` | Sign/verify tokens, extract claims |
+| `JwtAuthenticationFilter` | `auth/jwt/` | Per-request token validation; populates `SecurityContext` |
+| `SecurityConfig` | `config/` | Declares filter chain, URL rules, password encoder bean |
+| `AuthController` | `auth/` | `POST /api/v1/auth/login` — credential check → token |
+| `TenantFilter` | `config/` (multi-tenancy) | Reads `X-Tenant-ID` header into `TenantContext` thread-local |
+| `BCryptPasswordEncoder` | bean in `SecurityConfig` | Password hashing on registration; matching on login |

@@ -12,12 +12,12 @@
 Foundation for all tenant-scoped features. Must be completed before any tenant module is built.
 
 - [ ] Configure a secondary `DataSource` bean for the public schema (used by `PublicCatalogService`)
-- [ ] Implement `MultiTenantConnectionProvider` — switches the JDBC connection's search path per request
-- [ ] Implement `CurrentTenantIdentifierResolver` — reads `X-Tenant-ID` from a thread-local context
-- [ ] Implement `TenantContext` — thread-local holder set by the filter, cleared after the request
-- [ ] Implement `TenantFilter` — servlet filter that extracts `X-Tenant-ID` header and populates `TenantContext`
-- [ ] Configure Hibernate multi-tenancy strategy (`SCHEMA`) in `application.yaml`
-- [ ] Implement `TenantSchemaProvisioner` — utility that executes `CREATE SCHEMA IF NOT EXISTS <slug>` and runs DDL for all tenant tables
+- [x] Implement `MultiTenantConnectionProvider` — switches the JDBC connection's search path per request
+- [x] Implement `CurrentTenantIdentifierResolver` — reads `X-Tenant-ID` from a thread-local context
+- [x] Implement `TenantContext` — thread-local holder set by the filter, cleared after the request
+- [x] Implement `TenantFilter` — servlet filter that extracts `X-Tenant-ID` header and populates `TenantContext`
+- [x] Configure Hibernate multi-tenancy strategy (`SCHEMA`) in `application.yaml`
+- [x] Implement `TenantSchemaProvisioner` — utility that executes `CREATE SCHEMA IF NOT EXISTS <slug>` and runs DDL for all tenant tables
 - [ ] Wire `TenantSchemaProvisioner` to be called atomically on agency `PENDING → APPROVED` transition
 
 ---
@@ -26,16 +26,16 @@ Foundation for all tenant-scoped features. Must be completed before any tenant m
 
 Required by all protected endpoints. Build after multi-tenancy infrastructure.
 
-- [ ] Create `UserRole` enum (`MASTER_SUPER_ADMIN`, `AGENCY_OWNER`, `BRANCH_MANAGER`, `AGENT`)
-- [ ] Create `User` entity — `fullName`, `email`, `passwordHash`, `role`, `agencySlug`, `branchId`, `isActive`
-- [ ] Create `UserRepository` — `findByEmail`
-- [ ] Create `UserService` + DTOs (`RegisterUserRequest`, `UserResponse`)
-- [ ] Implement `JwtTokenProvider` — generate and validate signed JWT tokens
-- [ ] Implement `JwtAuthenticationFilter` — validates token per request, sets `SecurityContext`
-- [ ] Configure Spring Security — public routes (`/api/v1/auth/**`, `/api/v1/agencies/register`), per-role access rules
-- [ ] Create `AuthController` — `POST /api/v1/auth/login` returning JWT + role + agencySlug
-- [ ] Create `UserController` — tenant owner manages their own staff (`POST`, `PATCH`, `DELETE`)
-- [ ] Implement password hashing with BCrypt
+- [x] Create `UserRole` enum (`SUPER_ADMIN`, `AGENCY_OWNER`, `BRANCH_MANAGER`, `AGENT`)
+- [x] Create `User` entity — `firstName`, `lastName`, `email`, `passwordHash`, `role`, `agencySlug`, `branchId`, `isActive`
+- [x] Create `UserRepository` — `findByEmail`
+- [x] Create `UserService` + DTOs (`RegisterUserRequest`, `UserResponse`)
+- [x] Implement `JwtTokenProvider` — generate and validate signed JWT tokens
+- [x] Implement `JwtAuthenticationFilter` — validates token per request, sets `SecurityContext`
+- [x] Configure Spring Security — public routes (`/api/v1/auth/**`, `/api/v1/agencies/register`), per-role access rules
+- [x] Create `AuthController` — `POST /api/v1/auth/login` returning JWT + role + agencySlug
+- [x] Create `UserController` — tenant owner manages their own staff (`POST`, `PATCH`, `DELETE`)
+- [x] Implement password hashing with BCrypt
 
 ---
 
@@ -46,9 +46,9 @@ Two distinct sub-concerns: the public registration application (`AgencyRegistrat
 ### 3.1 `AgencyRegistration` — application lifecycle
 
 - [ ] Create `AgencyRegistrationStatus` enum (`PENDING`, `APPROVED`, `REJECTED`)
-- [ ] Create `AgencyRegistration` entity — `agencyName`, `rcNumber`, `iceNumber`, `ifNumber`, `patente`, `city`, `address`, `website`, `ownerFullName`, `ownerEmail`, `ownerPhone`, `status`, `rejectionReason`, `submittedAt`, `reviewedAt`, `reviewedBy`, `resolvedAgencyId`
+- [ ] Create `AgencyRegistration` entity — `agencyName`, `rcNumber`, `iceNumber`, `ifNumber`, `patente`, `city`, `address`, `website`, `ownerFirstName`, `ownerlastName`, `ownerEmail`, `ownerPhone`, `status`, `rejectionReason`, `submittedAt`, `reviewedAt`, `reviewedBy`, `resolvedAgencyId`
 - [ ] Create `AgencyRegistrationRepository` — `findAllByStatus`, `existsByRcNumber`, `existsByIceNumber`, `existsByOwnerEmail`
-- [ ] Create `SubmitRegistrationRequest` DTO — `agencyName`, `rcNumber`, `iceNumber`, `ifNumber` (opt), `patente` (opt), `city`, `address` (opt), `website` (opt), `ownerFullName`, `ownerEmail`, `ownerPhone`
+- [ ] Create `SubmitRegistrationRequest` DTO — `agencyName`, `rcNumber`, `iceNumber`, `ifNumber` (opt), `patente` (opt), `city`, `address` (opt), `website` (opt), `ownerFirstName`, `ownerlastName`, `ownerEmail`, `ownerPhone`
 - [ ] Create `AgencyRegistrationResponse` DTO
 - [ ] Create `AgencyRegistrationService` — `submit`, `approve`, `reject`, `getAll`, `get`
 - [ ] Implement `submit` — validates uniqueness of `rcNumber`, `iceNumber`, `ownerEmail`; creates `AgencyRegistration` with `status=PENDING` and `submittedAt`
@@ -56,10 +56,10 @@ Two distinct sub-concerns: the public registration application (`AgencyRegistrat
 - [ ] Implement `reject` — sets registration `status=REJECTED`, `reviewedAt`, `rejectionReason`; sends notification email placeholder
 - [ ] Create `AgencyRegistrationController`
   - [ ] `POST /api/v1/agencies/register` — public, no auth
-  - [ ] `GET /api/v1/admin/agencies/registrations` — `MASTER_SUPER_ADMIN` only, filterable by status
-  - [ ] `GET /api/v1/admin/agencies/registrations/{id}` — `MASTER_SUPER_ADMIN` only
-  - [ ] `POST /api/v1/admin/agencies/registrations/{id}/approve` — `MASTER_SUPER_ADMIN` only
-  - [ ] `POST /api/v1/admin/agencies/registrations/{id}/reject` — `MASTER_SUPER_ADMIN` only, body: `{ rejectionReason }`
+  - [ ] `GET /api/v1/admin/agencies/registrations` — `SUPER_ADMIN` only, filterable by status
+  - [ ] `GET /api/v1/admin/agencies/registrations/{id}` — `SUPER_ADMIN` only
+  - [ ] `POST /api/v1/admin/agencies/registrations/{id}/approve` — `SUPER_ADMIN` only
+  - [ ] `POST /api/v1/admin/agencies/registrations/{id}/reject` — `SUPER_ADMIN` only, body: `{ rejectionReason }`
 
 ### 3.2 `Agency` — approved tenant entity
 
@@ -71,10 +71,10 @@ Two distinct sub-concerns: the public registration application (`AgencyRegistrat
 - [ ] Create `AgencyService` — `block`, `unblock`, `getAll`, `get`
 - [ ] Implement `block` — sets `BLOCKED`; tenant middleware returns `403` for any request bearing this agency's slug
 - [ ] Create `AgencyController`
-  - [ ] `GET /api/v1/admin/agencies` — `MASTER_SUPER_ADMIN` only, filterable by status
-  - [ ] `GET /api/v1/admin/agencies/{id}` — `MASTER_SUPER_ADMIN` only
-  - [ ] `POST /api/v1/admin/agencies/{id}/block` — `MASTER_SUPER_ADMIN` only
-  - [ ] `POST /api/v1/admin/agencies/{id}/unblock` — `MASTER_SUPER_ADMIN` only
+  - [ ] `GET /api/v1/admin/agencies` — `SUPER_ADMIN` only, filterable by status
+  - [ ] `GET /api/v1/admin/agencies/{id}` — `SUPER_ADMIN` only
+  - [ ] `POST /api/v1/admin/agencies/{id}/block` — `SUPER_ADMIN` only
+  - [ ] `POST /api/v1/admin/agencies/{id}/unblock` — `SUPER_ADMIN` only
 
 ---
 
@@ -88,9 +88,9 @@ Handles plan management and the manual payment lifecycle.
 - [ ] Seed two default plans on startup: `SAFI` and `CHAMIL`
 - [ ] Create `SubscriptionPlanController`
   - [ ] `GET /api/v1/plans` — public (shown on pricing page)
-  - [ ] `POST /api/v1/admin/plans` — `MASTER_SUPER_ADMIN` only
-  - [ ] `PATCH /api/v1/admin/plans/{id}` — `MASTER_SUPER_ADMIN` only
-  - [ ] `POST /api/v1/admin/plans/{id}/deactivate` — `MASTER_SUPER_ADMIN` only
+  - [ ] `POST /api/v1/admin/plans` — `SUPER_ADMIN` only
+  - [ ] `PATCH /api/v1/admin/plans/{id}` — `SUPER_ADMIN` only
+  - [ ] `POST /api/v1/admin/plans/{id}/deactivate` — `SUPER_ADMIN` only
 - [ ] Create `SubscriptionStatus` enum (`PENDING_PAYMENT`, `ACTIVE`, `EXPIRED`, `SUSPENDED`)
 - [ ] Create `Subscription` entity — `agencySlug`, `plan` (FK), `status`, `startDate`, `endDate`, `amountDue`, `paymentMode`, `paidAt`, `invoiceUrl`
 - [ ] Create `SubscriptionRepository` — `findByAgencySlug`, `findCurrentByAgencySlug`
@@ -99,8 +99,8 @@ Handles plan management and the manual payment lifecycle.
 - [ ] Configure `@Async` `ThreadPoolTaskExecutor` bean for background document jobs
 - [ ] Implement async `SubscriptionInvoicePdfService` — generates PDF and writes `invoiceUrl`
 - [ ] Create `SubscriptionController`
-  - [ ] `GET /api/v1/admin/subscriptions` — `MASTER_SUPER_ADMIN` only
-  - [ ] `POST /api/v1/admin/subscriptions/{id}/mark-paid` — `MASTER_SUPER_ADMIN` only, body: `paymentMode`
+  - [ ] `GET /api/v1/admin/subscriptions` — `SUPER_ADMIN` only
+  - [ ] `POST /api/v1/admin/subscriptions/{id}/mark-paid` — `SUPER_ADMIN` only, body: `paymentMode`
   - [ ] `GET /api/v1/settings/subscription` — `AGENCY_OWNER` — current agency subscription + invoice download link
 
 ---
@@ -140,9 +140,9 @@ Moves existing catalog entities to public-schema context, adds soft-delete, and 
 - [ ] Create `CatalogRequestController`
   - [ ] `POST /api/v1/catalog-requests` — `AGENCY_OWNER` / `BRANCH_MANAGER`
   - [ ] `GET /api/v1/catalog-requests` — `AGENCY_OWNER` — own agency's requests
-  - [ ] `GET /api/v1/admin/catalog-requests` — `MASTER_SUPER_ADMIN`, filterable by type + status
-  - [ ] `POST /api/v1/admin/catalog-requests/{id}/approve` — `MASTER_SUPER_ADMIN`
-  - [ ] `POST /api/v1/admin/catalog-requests/{id}/reject` — `MASTER_SUPER_ADMIN`
+  - [ ] `GET /api/v1/admin/catalog-requests` — `SUPER_ADMIN`, filterable by type + status
+  - [ ] `POST /api/v1/admin/catalog-requests/{id}/approve` — `SUPER_ADMIN`
+  - [ ] `POST /api/v1/admin/catalog-requests/{id}/reject` — `SUPER_ADMIN`
 
 ---
 
@@ -293,8 +293,8 @@ Centralised quota guard called from Branch, Hub, and Vehicle service layers.
 
 | Section | Total | Done | Remaining |
 | ------- | ----- | ---- | --------- |
-| 1. Multi-Tenancy Infrastructure | 8 | 0 | 8 |
-| 2. Auth & Security | 10 | 0 | 10 |
+| 1. Multi-Tenancy Infrastructure | 8 | 5 | 3 |
+| 2. Auth & Security | 10 | 10 | 0 |
 | 3. Agency Registration & Management | 25 | 2 | 23 |
 | 4. Subscription & Billing | 15 | 0 | 15 |
 | 5. Catalog — Updates & Extensions | 17 | 9 | 8 |
@@ -305,4 +305,4 @@ Centralised quota guard called from Branch, Hub, and Vehicle service layers.
 | 10. Signatures & Contract Compliance | 3 | 0 | 3 |
 | 11. Document Generation | 9 | 0 | 9 |
 | 12. Plan Quota Enforcement | 6 | 0 | 6 |
-| **Total** | **142** | **19** | **123** |
+| **Total** | **142** | **34** | **108** |
