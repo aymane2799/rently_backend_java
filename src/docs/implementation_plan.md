@@ -82,26 +82,26 @@ Two distinct sub-concerns: the public registration application (`AgencyRegistrat
 
 Handles plan management and the manual payment lifecycle.
 
-- [ ] Create `SubscriptionPlan` entity — `code`, `displayName`, `description`, `priceMonthly`, `priceYearly`, `maxBranches`, `maxHubs`, `maxVehicles`, `isActive`
-- [ ] Create `SubscriptionPlanRepository`
-- [ ] Create `SubscriptionPlanService` + DTOs
-- [ ] Seed two default plans on startup: `SAFI` and `CHAMIL`
-- [ ] Create `SubscriptionPlanController`
-  - [ ] `GET /api/v1/plans` — public (shown on pricing page)
-  - [ ] `POST /api/v1/admin/plans` — `SUPER_ADMIN` only
-  - [ ] `PATCH /api/v1/admin/plans/{id}` — `SUPER_ADMIN` only
-  - [ ] `POST /api/v1/admin/plans/{id}/deactivate` — `SUPER_ADMIN` only
-- [ ] Create `SubscriptionStatus` enum (`PENDING_PAYMENT`, `ACTIVE`, `EXPIRED`, `SUSPENDED`)
-- [ ] Create `Subscription` entity — `agencySlug`, `plan` (FK), `status`, `startDate`, `endDate`, `amountDue`, `paymentMode`, `paidAt`, `invoiceUrl`
-- [ ] Create `SubscriptionRepository` — `findByAgencySlug`, `findCurrentByAgencySlug`
-- [ ] Create `SubscriptionService` — `create`, `markAsPaid`, `getForAgency`
-- [ ] Implement `markAsPaid` — sets `status=ACTIVE`, `paidAt`, triggers async invoice PDF generation
-- [ ] Configure `@Async` `ThreadPoolTaskExecutor` bean for background document jobs
-- [ ] Implement async `SubscriptionInvoicePdfService` — generates PDF and writes `invoiceUrl`
-- [ ] Create `SubscriptionController`
-  - [ ] `GET /api/v1/admin/subscriptions` — `SUPER_ADMIN` only
-  - [ ] `POST /api/v1/admin/subscriptions/{id}/mark-paid` — `SUPER_ADMIN` only, body: `paymentMode`
-  - [ ] `GET /api/v1/settings/subscription` — `AGENCY_OWNER` — current agency subscription + invoice download link
+- [x] Create `SubscriptionPlan` entity — `code`, `displayName`, `description`, `priceMonthly`, `priceYearly`, `maxBranches`, `maxHubs`, `maxVehicles`, `isActive`
+- [x] Create `SubscriptionPlanRepository`
+- [x] Create `SubscriptionPlanService` + DTOs
+- [x] Seed two default plans on startup: `SAFI` and `CHAMIL`
+- [x] Create `SubscriptionPlanController`
+  - [x] `GET /api/v1/plans` — public (shown on pricing page)
+  - [x] `POST /api/v1/admin/plans` — `SUPER_ADMIN` only
+  - [x] `PATCH /api/v1/admin/plans/{id}` — `SUPER_ADMIN` only
+  - [x] `POST /api/v1/admin/plans/{id}/deactivate` — `SUPER_ADMIN` only
+- [x] Create `SubscriptionStatus` enum (`PENDING_PAYMENT`, `ACTIVE`, `EXPIRED`, `SUSPENDED`)
+- [x] Create `Subscription` entity — `agencySlug`, `plan` (FK), `status`, `startDate`, `endDate`, `amountDue`, `paymentMode`, `paidAt`, `invoiceUrl`
+- [x] Create `SubscriptionRepository` — `findByAgencySlug`, `findCurrentByAgencySlug`
+- [x] Create `SubscriptionService` — `create`, `markAsPaid`, `getForAgency`
+- [x] Implement `markAsPaid` — sets `status=ACTIVE`, `paidAt`, triggers async invoice PDF generation
+- [x] Configure `@Async` `ThreadPoolTaskExecutor` bean for background document jobs
+- [x] Implement async `SubscriptionInvoicePdfService` — generates PDF and writes `invoiceUrl`
+- [x] Create `SubscriptionController`
+  - [x] `GET /api/v1/admin/subscriptions` — `SUPER_ADMIN` only
+  - [x] `POST /api/v1/admin/subscriptions/{id}/mark-paid` — `SUPER_ADMIN` only, body: `paymentMode`
+  - [x] `GET /api/v1/settings/subscription` — `AGENCY_OWNER` — current agency subscription + invoice download link
 
 ---
 
@@ -296,7 +296,7 @@ Centralised quota guard called from Branch, Hub, and Vehicle service layers.
 | 1. Multi-Tenancy Infrastructure | 8 | 5 | 3 |
 | 2. Auth & Security | 10 | 10 | 0 |
 | 3. Agency Registration & Management | 25 | 25 | 0 |
-| 4. Subscription & Billing | 15 | 0 | 15 |
+| 4. Subscription & Billing | 15 | 15 | 0 |
 | 5. Catalog — Updates & Extensions | 17 | 9 | 8 |
 | 6. Fleet — Updates to Existing Code | 10 | 8 | 2 |
 | 7. Location — Branch & Hub | 16 | 0 | 16 |
@@ -305,4 +305,4 @@ Centralised quota guard called from Branch, Hub, and Vehicle service layers.
 | 10. Signatures & Contract Compliance | 3 | 0 | 3 |
 | 11. Document Generation | 9 | 0 | 9 |
 | 12. Plan Quota Enforcement | 6 | 0 | 6 |
-| **Total** | **142** | **57** | **85** |
+| **Total** | **142** | **72** | **70** |
