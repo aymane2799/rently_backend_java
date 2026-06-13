@@ -9,4 +9,6 @@ public interface ReservationService {
     void close(String id);
     void cancel(String id);
     void updateContractStatus(String id);
+    void sign(String id, String signatureBase64);
+    void markPrinted(String id);
 }

@@ -116,6 +116,30 @@ public class ReservationServiceImplementation implements ReservationService {
         repository.save(reservation);
     }
 
+    @Override
+    @Transactional
+    public void sign(String id, String signatureBase64) {
+        if (signatureBase64.length() > 500 * 1024) {
+            throw new IllegalArgumentException("Signature Base64 payload exceeds the 500KB limit");
+        }
+        Reservation reservation = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Reservation with id " + id + " not found!"));
+        reservation.setDigitallySigned(true);
+        reservation.setSignatureBase64(signatureBase64);
+        reservation.setContractStatus(deriveContractStatus(true, reservation.isPhysicallyPrinted()));
+        repository.save(reservation);
+    }
+
+    @Override
+    @Transactional
+    public void markPrinted(String id) {
+        Reservation reservation = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Reservation with id " + id + " not found!"));
+        reservation.setPhysicallyPrinted(true);
+        reservation.setContractStatus(deriveContractStatus(reservation.isDigitallySigned(), true));
+        repository.save(reservation);
+    }
+
     private ContractStatus deriveContractStatus(boolean digitallySigned, boolean physicallyPrinted) {
         if (digitallySigned && physicallyPrinted) return ContractStatus.FULLY_EXECUTED;
         if (digitallySigned || physicallyPrinted) return ContractStatus.PARTIAL_EXECUTION;

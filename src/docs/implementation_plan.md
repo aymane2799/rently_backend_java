@@ -252,10 +252,10 @@ Created alongside each reservation; managed through the deposit lifecycle.
 
 ## 10. Signatures & Contract Compliance
 
-- [ ] Create `SignatureController`
-  - [ ] `POST /api/v1/reservations/{id}/signature` — `AGENT`; body: `{ signatureBase64: string }`; sets `isDigitallySigned=true`, stores Base64 PNG, triggers `updateContractStatus`
-  - [ ] `POST /api/v1/reservations/{id}/mark-printed` — `AGENT`; sets `isPhysicallyPrinted=true`, triggers `updateContractStatus`
-- [ ] Validate Base64 payload size server-side (reject if > 500KB after encoding)
+- [x] Create `SignatureController`
+  - [x] `POST /api/v1/reservations/{id}/signature` — `AGENT`; body: `{ signatureBase64: string }`; sets `isDigitallySigned=true`, stores Base64 PNG, triggers `updateContractStatus`
+  - [x] `POST /api/v1/reservations/{id}/mark-printed` — `AGENT`; sets `isPhysicallyPrinted=true`, triggers `updateContractStatus`
+- [x] Validate Base64 payload size server-side (reject if > 500KB after encoding)
 
 ---
 
@@ -302,7 +302,7 @@ Centralised quota guard called from Branch, Hub, and Vehicle service layers.
 | 7. Location — Branch & Hub | 16 | 16 | 0 |
 | 8. Reservations — Customer & Booking | 15 | 15 | 0 |
 | 9. Payment & Deposit | 8 | 8 | 0 |
-| 10. Signatures & Contract Compliance | 3 | 0 | 3 |
+| 10. Signatures & Contract Compliance | 3 | 3 | 0 |
 | 11. Document Generation | 9 | 0 | 9 |
 | 12. Plan Quota Enforcement | 6 | 0 | 6 |
-| **Total** | **142** | **121** | **21** |
+| **Total** | **142** | **124** | **18** |
