@@ -263,16 +263,16 @@ Created alongside each reservation; managed through the deposit lifecycle.
 
 All generation runs off the main HTTP thread via `@Async`.
 
-- [ ] Implement `PdfGenerationService` using an HTML-to-PDF library (e.g., Flying Saucer / OpenPDF)
-- [ ] Design rental contract HTML template — A4 layout, fields: agency ICE / IF / Patent / RC, customer identity, vehicle details, rental period, amounts, digital signature in footer
-- [ ] Implement `ContractPdfService.generateAsync(reservationId)` — renders template, writes file, updates reservation with PDF URL
-- [ ] Design customer invoice HTML template — A4, itemised totals, agency tax identifiers
-- [ ] Implement `InvoicePdfService.generateAsync(reservationId)` — triggered on `Reservation.close`
-- [ ] Implement `SubscriptionInvoicePdfService.generateAsync(subscriptionId)` — triggered on `Subscription.markAsPaid`
-- [ ] Create `DocumentStatusController`
-  - [ ] `GET /api/v1/reservations/{id}/contract/status` — returns `{ ready: boolean, url: string | null }`
-  - [ ] `GET /api/v1/reservations/{id}/invoice/status`
-  - [ ] `GET /api/v1/settings/subscription/invoice/status`
+- [x] Implement `PdfGenerationService` using an HTML-to-PDF library (e.g., Flying Saucer / OpenPDF)
+- [x] Design rental contract HTML template — A4 layout, fields: agency ICE / IF / Patent / RC, customer identity, vehicle details, rental period, amounts, digital signature in footer
+- [x] Implement `ContractPdfService.generateAsync(reservationId)` — renders template, writes file, updates reservation with PDF URL
+- [x] Design customer invoice HTML template — A4, itemised totals, agency tax identifiers
+- [x] Implement `InvoicePdfService.generateAsync(reservationId)` — triggered on `Reservation.close`
+- [x] Implement `SubscriptionInvoicePdfService.generateAsync(subscriptionId)` — triggered on `Subscription.markAsPaid`
+- [x] Create `DocumentStatusController`
+  - [x] `GET /api/v1/reservations/{id}/contract/status` — returns `{ ready: boolean, url: string | null }`
+  - [x] `GET /api/v1/reservations/{id}/invoice/status`
+  - [x] `GET /api/v1/settings/subscription/invoice/status`
 
 ---
 
@@ -303,6 +303,6 @@ Centralised quota guard called from Branch, Hub, and Vehicle service layers.
 | 8. Reservations — Customer & Booking | 15 | 15 | 0 |
 | 9. Payment & Deposit | 8 | 8 | 0 |
 | 10. Signatures & Contract Compliance | 3 | 3 | 0 |
-| 11. Document Generation | 9 | 0 | 9 |
+| 11. Document Generation | 9 | 9 | 0 |
 | 12. Plan Quota Enforcement | 6 | 0 | 6 |
-| **Total** | **142** | **124** | **18** |
+| **Total** | **142** | **133** | **9** |

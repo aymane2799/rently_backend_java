@@ -31,6 +31,8 @@ public class ReservationResponse {
     private ContractStatus contractStatus;
     private String createdBy;
     private PaymentResponse payment;
+    private String contractUrl;
+    private String invoiceUrl;
     private Instant createdAt;
     private Instant updatedAt;
 }

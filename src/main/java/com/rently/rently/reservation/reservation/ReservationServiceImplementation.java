@@ -1,7 +1,10 @@
 package com.rently.rently.reservation.reservation;
 
+import com.rently.rently.document.ContractPdfService;
+import com.rently.rently.document.InvoicePdfService;
 import com.rently.rently.fleet.vehicles.VehicleRepository;
 import com.rently.rently.fleet.vehicles.VehicleStatus;
+import com.rently.rently.multitenancy.TenantContext;
 import com.rently.rently.reservation.payment.PaymentResponse;
 import com.rently.rently.reservation.payment.PaymentService;
 import com.rently.rently.reservation.reservation.hydration.ReservationHydrationContext;
@@ -22,6 +25,8 @@ public class ReservationServiceImplementation implements ReservationService {
     private final ReservationMapper mapper;
     private final ReservationHydrator hydrator;
     private final PaymentService paymentService;
+    private final ContractPdfService contractPdfService;
+    private final InvoicePdfService invoicePdfService;
 
     @Override
     @Transactional
@@ -55,6 +60,9 @@ public class ReservationServiceImplementation implements ReservationService {
         Reservation savedReservation = repository.save(reservation);
         paymentService.createForReservation(savedReservation, request.getPayment());
         PaymentResponse paymentResponse = paymentService.getForReservation(savedReservation.getId());
+
+        String tenantSlug = TenantContext.getTenantId();
+        contractPdfService.generateAsync(savedReservation.getId(), tenantSlug);
 
         return mapper.toResponse(savedReservation, paymentResponse);
     }
@@ -90,7 +98,8 @@ public class ReservationServiceImplementation implements ReservationService {
 
         repository.save(reservation);
 
-        // TODO: Phase 11 — InvoicePdfService.generateAsync(reservation.getId())
+        String tenantSlug = TenantContext.getTenantId();
+        invoicePdfService.generateAsync(reservation.getId(), tenantSlug);
     }
 
     @Override

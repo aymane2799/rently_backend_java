@@ -57,6 +57,8 @@ public class ReservationMapper implements
                 .contractStatus(entity.getContractStatus())
                 .createdBy(entity.getCreatedBy())
                 .payment(paymentResponse)
+                .contractUrl(entity.getContractUrl())
+                .invoiceUrl(entity.getInvoiceUrl())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();

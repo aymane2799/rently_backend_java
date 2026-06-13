@@ -31,3 +31,8 @@ management:
 jwt:
   secret: ${JWT_SECRET:kiradrive-default-secret-key-change-in-production-must-be-256-bits}
   expiration: ${JWT_EXPIRATION:86400000}   # 24 hours in ms
+
+# Document generation storage
+document:
+  storage:
+    path: ${DOCUMENT_STORAGE_PATH:./documents}

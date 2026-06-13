@@ -58,6 +58,20 @@ public class PublicCatalogService {
         }
     }
 
+    public Model getModelWithBrand(String modelId) {
+        EntityManager em = entityManagerFactory.createEntityManager();
+        try {
+            List<Model> result = em.createQuery(
+                    "SELECT m FROM Model m JOIN FETCH m.brand WHERE m.id = :id", Model.class)
+                    .setParameter("id", modelId)
+                    .getResultList();
+            if (result.isEmpty()) throw new EntityNotFoundException("Model not found: " + modelId);
+            return result.get(0);
+        } finally {
+            em.close();
+        }
+    }
+
     public boolean modelExists(String modelId) {
         EntityManager em = entityManagerFactory.createEntityManager();
         try {

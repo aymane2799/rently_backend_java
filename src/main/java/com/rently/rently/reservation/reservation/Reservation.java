@@ -67,4 +67,10 @@ public class Reservation extends Auditable {
 
     @Column(name = "created_by", nullable = false)
     private String createdBy;
+
+    @Column(name = "contract_url")
+    private String contractUrl;
+
+    @Column(name = "invoice_url")
+    private String invoiceUrl;
 }
