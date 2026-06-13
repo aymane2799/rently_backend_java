@@ -3,6 +3,7 @@ package com.rently.rently.reservation.reservation;
 import com.rently.rently.fleet.vehicles.VehicleResponse;
 import com.rently.rently.location.hub.HubResponse;
 import com.rently.rently.reservation.customer.CustomerResponse;
+import com.rently.rently.reservation.payment.PaymentResponse;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -29,6 +30,7 @@ public class ReservationResponse {
     private String signatureBase64;
     private ContractStatus contractStatus;
     private String createdBy;
+    private PaymentResponse payment;
     private Instant createdAt;
     private Instant updatedAt;
 }

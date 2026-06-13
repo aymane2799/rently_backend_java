@@ -1,5 +1,7 @@
 package com.rently.rently.reservation.reservation;
 
+import com.rently.rently.reservation.payment.CreatePaymentRequest;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -36,4 +38,8 @@ public class CreateReservationRequest {
     @NotNull
     @Positive
     private BigDecimal totalAmount;
+
+    @Valid
+    @NotNull
+    private CreatePaymentRequest payment;
 }

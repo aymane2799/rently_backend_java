@@ -236,17 +236,17 @@ Core operational flow.
 
 Created alongside each reservation; managed through the deposit lifecycle.
 
-- [ ] Create `DepositType` enum (`CASH`, `CHEQUE`, `CREDIT_CARD_PREAUTH`)
-- [ ] Create `DepositStatus` enum (`ACTIVE_HOLD`, `RELEASED`)
-- [ ] Create `Payment` entity — all fields per architecture doc (§2.14)
-- [ ] Add validation: `chequeNumber` required when `depositType=CHEQUE`; `creditCardAuthReference` required when `depositType=CREDIT_CARD_PREAUTH`
-- [ ] Create `PaymentRepository`
-- [ ] Create `PaymentService`
-  - [ ] `createForReservation` — called atomically inside `ReservationService.create`
-  - [ ] `releaseDeposit` — sets `depositStatus=RELEASED`, records `depositReleasedAt` + `depositReleasedBy`; restricted to `BRANCH_MANAGER` / `AGENCY_OWNER`
-- [ ] Create `PaymentController`
-  - [ ] `GET /api/v1/reservations/{reservationId}/payment`
-  - [ ] `POST /api/v1/reservations/{reservationId}/payment/release-deposit` — `BRANCH_MANAGER` / `AGENCY_OWNER`
+- [x] Create `DepositType` enum (`CASH`, `CHEQUE`, `CREDIT_CARD_PREAUTH`)
+- [x] Create `DepositStatus` enum (`ACTIVE_HOLD`, `RELEASED`)
+- [x] Create `Payment` entity — all fields per architecture doc (§2.14)
+- [x] Add validation: `chequeNumber` required when `depositType=CHEQUE`; `creditCardAuthReference` required when `depositType=CREDIT_CARD_PREAUTH`
+- [x] Create `PaymentRepository`
+- [x] Create `PaymentService`
+  - [x] `createForReservation` — called atomically inside `ReservationService.create`
+  - [x] `releaseDeposit` — sets `depositStatus=RELEASED`, records `depositReleasedAt` + `depositReleasedBy`; restricted to `BRANCH_MANAGER` / `AGENCY_OWNER`
+- [x] Create `PaymentController`
+  - [x] `GET /api/v1/reservations/{reservationId}/payment`
+  - [x] `POST /api/v1/reservations/{reservationId}/payment/release-deposit` — `BRANCH_MANAGER` / `AGENCY_OWNER`
 
 ---
 
@@ -301,8 +301,8 @@ Centralised quota guard called from Branch, Hub, and Vehicle service layers.
 | 6. Fleet — Updates to Existing Code | 10 | 10 | 0 |
 | 7. Location — Branch & Hub | 16 | 16 | 0 |
 | 8. Reservations — Customer & Booking | 15 | 15 | 0 |
-| 9. Payment & Deposit | 8 | 0 | 8 |
+| 9. Payment & Deposit | 8 | 8 | 0 |
 | 10. Signatures & Contract Compliance | 3 | 0 | 3 |
 | 11. Document Generation | 9 | 0 | 9 |
 | 12. Plan Quota Enforcement | 6 | 0 | 6 |
-| **Total** | **142** | **113** | **29** |
+| **Total** | **142** | **121** | **21** |

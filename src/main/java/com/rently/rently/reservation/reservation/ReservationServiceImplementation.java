@@ -2,6 +2,8 @@ package com.rently.rently.reservation.reservation;
 
 import com.rently.rently.fleet.vehicles.VehicleRepository;
 import com.rently.rently.fleet.vehicles.VehicleStatus;
+import com.rently.rently.reservation.payment.PaymentResponse;
+import com.rently.rently.reservation.payment.PaymentService;
 import com.rently.rently.reservation.reservation.hydration.ReservationHydrationContext;
 import com.rently.rently.reservation.reservation.hydration.ReservationHydrator;
 import jakarta.persistence.EntityNotFoundException;
@@ -19,6 +21,7 @@ public class ReservationServiceImplementation implements ReservationService {
     private final VehicleRepository vehicleRepository;
     private final ReservationMapper mapper;
     private final ReservationHydrator hydrator;
+    private final PaymentService paymentService;
 
     @Override
     @Transactional
@@ -49,15 +52,17 @@ public class ReservationServiceImplementation implements ReservationService {
         ctx.getVehicle().setStatus(VehicleStatus.RENTED);
         vehicleRepository.save(ctx.getVehicle());
 
-        // TODO: Phase 9 — PaymentService.createForReservation(savedReservation, paymentRequest)
+        Reservation savedReservation = repository.save(reservation);
+        paymentService.createForReservation(savedReservation, request.getPayment());
+        PaymentResponse paymentResponse = paymentService.getForReservation(savedReservation.getId());
 
-        return mapper.toResponse(repository.save(reservation));
+        return mapper.toResponse(savedReservation, paymentResponse);
     }
 
     @Override
     public List<ReservationResponse> getAll() {
         return repository.findAll().stream()
-                .map(mapper::toResponse)
+                .map(r -> mapper.toResponse(r, paymentService.findForReservation(r.getId()).orElse(null)))
                 .toList();
     }
 
@@ -65,7 +70,8 @@ public class ReservationServiceImplementation implements ReservationService {
     public ReservationResponse get(String id) {
         Reservation reservation = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Reservation with id " + id + " not found!"));
-        return mapper.toResponse(reservation);
+        PaymentResponse paymentResponse = paymentService.findForReservation(id).orElse(null);
+        return mapper.toResponse(reservation, paymentResponse);
     }
 
     @Override
