@@ -1,5 +1,6 @@
 package com.rently.rently.fleet.vehicles;
 
+import com.rently.rently.billing.QuotaService;
 import com.rently.rently.catalog.PublicCatalogService;
 import com.rently.rently.fleet.vehicles.hydration.VehicleHydrationContext;
 import com.rently.rently.fleet.vehicles.hydration.VehicleHydrator;
@@ -18,6 +19,7 @@ public class VehicleServiceImplementation implements VehicleService {
     private final VehicleMapper vehicleMapper;
     private final VehicleHydrator hydrator;
     private final PublicCatalogService publicCatalogService;
+    private final QuotaService quotaService;
 
     @Override
     public List<VehicleResponse> getAll() {
@@ -33,6 +35,7 @@ public class VehicleServiceImplementation implements VehicleService {
 
     @Override
     public VehicleResponse create(CreateVehicleRequest request) {
+        quotaService.assertCanAddVehicle();
         if (repository.findByLicensePlate(request.getLicensePlate()).isPresent()) {
             throw new EntityExistsException("Vehicle with license plate " + request.getLicensePlate() + " already exists!");
         }

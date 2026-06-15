@@ -280,12 +280,12 @@ All generation runs off the main HTTP thread via `@Async`.
 
 Centralised quota guard called from Branch, Hub, and Vehicle service layers.
 
-- [ ] Implement `QuotaService` — resolves current agency's `SubscriptionPlan` (cached via Spring Cache + short TTL), exposes `assertCanAddBranch`, `assertCanAddHub`, `assertCanAddVehicle`
-- [ ] Configure Spring Cache (`@EnableCaching`) with a short TTL cache for `SubscriptionPlan` lookups
-- [ ] Wire `QuotaService.assertCanAddBranch` into `BranchService.create`
-- [ ] Wire `QuotaService.assertCanAddHub` into `HubService.create`
-- [ ] Wire `QuotaService.assertCanAddVehicle` into `VehicleService.create`
-- [ ] Return `HTTP 403` with a structured error body when a quota is exceeded
+- [x] Implement `QuotaService` — resolves current agency's `SubscriptionPlan` (cached via Spring Cache + short TTL), exposes `assertCanAddBranch`, `assertCanAddHub`, `assertCanAddVehicle`
+- [x] Configure Spring Cache (`@EnableCaching`) with a short TTL cache for `SubscriptionPlan` lookups
+- [x] Wire `QuotaService.assertCanAddBranch` into `BranchService.create`
+- [x] Wire `QuotaService.assertCanAddHub` into `HubService.create`
+- [x] Wire `QuotaService.assertCanAddVehicle` into `VehicleService.create`
+- [x] Return `HTTP 403` with a structured error body when a quota is exceeded
 
 ---
 
@@ -304,5 +304,5 @@ Centralised quota guard called from Branch, Hub, and Vehicle service layers.
 | 9. Payment & Deposit | 8 | 8 | 0 |
 | 10. Signatures & Contract Compliance | 3 | 3 | 0 |
 | 11. Document Generation | 9 | 9 | 0 |
-| 12. Plan Quota Enforcement | 6 | 0 | 6 |
-| **Total** | **142** | **133** | **9** |
+| 12. Plan Quota Enforcement | 6 | 6 | 0 |
+| **Total** | **142** | **139** | **3** |

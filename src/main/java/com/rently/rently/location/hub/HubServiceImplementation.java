@@ -1,5 +1,6 @@
 package com.rently.rently.location.hub;
 
+import com.rently.rently.billing.QuotaService;
 import com.rently.rently.location.branch.Branch;
 import com.rently.rently.location.branch.BranchRepository;
 import com.rently.rently.location.hub.hydration.HubHydrationContext;
@@ -18,6 +19,7 @@ public class HubServiceImplementation implements HubService {
     private final BranchRepository branchRepository;
     private final HubMapper mapper;
     private final HubHydrator hydrator;
+    private final QuotaService quotaService;
 
     @Override
     public List<HubResponse> getAllByBranch(String branchId) {
@@ -37,7 +39,7 @@ public class HubServiceImplementation implements HubService {
 
     @Override
     public HubResponse create(String branchId, CreateHubRequest request) {
-        // TODO: Phase 12 — QuotaService.assertCanAddHub()
+        quotaService.assertCanAddHub();
         HubHydrationContext ctx = hydrator.hydrate(branchId);
         Hub hub = mapper.toEntity(request, ctx);
         return mapper.toResponse(repository.save(hub));

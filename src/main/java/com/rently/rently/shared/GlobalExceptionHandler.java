@@ -26,6 +26,12 @@ public class GlobalExceptionHandler {
         return ErrorResponse.of(e.getMessage(), HttpStatus.CONFLICT.value());
     }
 
+    @ExceptionHandler(QuotaExceededException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponse handleQuotaExceeded(QuotaExceededException e) {
+        return ErrorResponse.of(e.getMessage(), HttpStatus.FORBIDDEN.value());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleValidation(MethodArgumentNotValidException e) {

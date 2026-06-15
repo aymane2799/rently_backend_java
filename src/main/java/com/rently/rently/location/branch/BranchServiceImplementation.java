@@ -1,5 +1,6 @@
 package com.rently.rently.location.branch;
 
+import com.rently.rently.billing.QuotaService;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ public class BranchServiceImplementation implements BranchService {
 
     private final BranchRepository repository;
     private final BranchMapper mapper;
+    private final QuotaService quotaService;
 
     @Override
     public List<BranchResponse> getAll() {
@@ -30,7 +32,7 @@ public class BranchServiceImplementation implements BranchService {
 
     @Override
     public BranchResponse create(CreateBranchRequest request) {
-        // TODO: Phase 12 — QuotaService.assertCanAddBranch()
+        quotaService.assertCanAddBranch();
         if (repository.findByName(request.getName()).isPresent()) {
             throw new EntityExistsException("Branch with name '" + request.getName() + "' already exists!");
         }
