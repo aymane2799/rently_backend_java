@@ -11,14 +11,14 @@
 
 Foundation for all tenant-scoped features. Must be completed before any tenant module is built.
 
-- [ ] Configure a secondary `DataSource` bean for the public schema (used by `PublicCatalogService`)
+- [x] Configure a secondary `DataSource` bean for the public schema (used by `PublicCatalogService`)
 - [x] Implement `MultiTenantConnectionProvider` — switches the JDBC connection's search path per request
 - [x] Implement `CurrentTenantIdentifierResolver` — reads `X-Tenant-ID` from a thread-local context
 - [x] Implement `TenantContext` — thread-local holder set by the filter, cleared after the request
 - [x] Implement `TenantFilter` — servlet filter that extracts `X-Tenant-ID` header and populates `TenantContext`
 - [x] Configure Hibernate multi-tenancy strategy (`SCHEMA`) in `application.yaml`
 - [x] Implement `TenantSchemaProvisioner` — utility that executes `CREATE SCHEMA IF NOT EXISTS <slug>` and runs DDL for all tenant tables
-- [ ] Wire `TenantSchemaProvisioner` to be called atomically on agency `PENDING → APPROVED` transition
+- [x] Wire `TenantSchemaProvisioner` to be called atomically on agency `PENDING → APPROVED` transition
 
 ---
 
@@ -293,7 +293,7 @@ Centralised quota guard called from Branch, Hub, and Vehicle service layers.
 
 | Section | Total | Done | Remaining |
 | ------- | ----- | ---- | --------- |
-| 1. Multi-Tenancy Infrastructure | 8 | 5 | 3 |
+| 1. Multi-Tenancy Infrastructure | 8 | 8 | 0 |
 | 2. Auth & Security | 10 | 10 | 0 |
 | 3. Agency Registration & Management | 25 | 25 | 0 |
 | 4. Subscription & Billing | 15 | 15 | 0 |
@@ -305,4 +305,4 @@ Centralised quota guard called from Branch, Hub, and Vehicle service layers.
 | 10. Signatures & Contract Compliance | 3 | 3 | 0 |
 | 11. Document Generation | 9 | 9 | 0 |
 | 12. Plan Quota Enforcement | 6 | 6 | 0 |
-| **Total** | **142** | **139** | **3** |
+| **Total** | **142** | **142** | **0** |
