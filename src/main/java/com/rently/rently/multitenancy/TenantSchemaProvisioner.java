@@ -28,9 +28,12 @@ public class TenantSchemaProvisioner {
                 createHubsTable(stmt);
                 createVehiclesTable(stmt);
                 createVehicleFeaturesTable(stmt);
+                createVehicleImagesTable(stmt);
                 createCustomersTable(stmt);
                 createReservationsTable(stmt);
                 createPaymentsTable(stmt);
+                createClientAccountsTable(stmt);
+                createBookingRequestsTable(stmt);
                 conn.commit();
             } catch (SQLException e) {
                 conn.rollback();
@@ -41,6 +44,52 @@ public class TenantSchemaProvisioner {
         } catch (SQLException e) {
             throw new RuntimeException("Failed to provision schema for tenant: " + slug, e);
         }
+    }
+
+    private void createClientAccountsTable(Statement stmt) throws SQLException {
+        stmt.execute("""
+                CREATE TABLE IF NOT EXISTS client_accounts (
+                    id VARCHAR(36) PRIMARY KEY,
+                    first_name VARCHAR(255) NOT NULL,
+                    last_name VARCHAR(255) NOT NULL,
+                    email VARCHAR(255) NOT NULL UNIQUE,
+                    phone VARCHAR(50) NOT NULL,
+                    password_hash VARCHAR(255) NOT NULL,
+                    is_active BOOLEAN NOT NULL DEFAULT true,
+                    email_verified_at TIMESTAMPTZ,
+                    created_at TIMESTAMPTZ NOT NULL,
+                    updated_at TIMESTAMPTZ NOT NULL
+                )
+                """);
+    }
+
+    private void createBookingRequestsTable(Statement stmt) throws SQLException {
+        stmt.execute("""
+                CREATE TABLE IF NOT EXISTS booking_requests (
+                    id VARCHAR(36) PRIMARY KEY,
+                    client_id VARCHAR(36) NOT NULL REFERENCES client_accounts(id),
+                    vehicle_id VARCHAR(36) NOT NULL REFERENCES vehicles(id),
+                    pickup_hub_id VARCHAR(36) NOT NULL REFERENCES hubs(id),
+                    return_hub_id VARCHAR(36) NOT NULL REFERENCES hubs(id),
+                    start_date TIMESTAMP NOT NULL,
+                    end_date TIMESTAMP NOT NULL,
+                    id_type VARCHAR(20) NOT NULL,
+                    id_number VARCHAR(255) NOT NULL,
+                    driver_license_code VARCHAR(255) NOT NULL,
+                    id_document_url VARCHAR(500) NOT NULL,
+                    driver_license_document_url VARCHAR(500) NOT NULL,
+                    status VARCHAR(30) NOT NULL DEFAULT 'PENDING_CONFIRMATION',
+                    notes TEXT,
+                    rejection_reason TEXT,
+                    confirmed_by VARCHAR(36),
+                    confirmed_at TIMESTAMPTZ,
+                    rejected_by VARCHAR(36),
+                    rejected_at TIMESTAMPTZ,
+                    converted_reservation_id VARCHAR(36),
+                    created_at TIMESTAMPTZ NOT NULL,
+                    updated_at TIMESTAMPTZ NOT NULL
+                )
+                """);
     }
 
     private void validateSlug(String slug) {
@@ -113,6 +162,21 @@ public class TenantSchemaProvisioner {
                     vehicle_id VARCHAR(36) NOT NULL REFERENCES vehicles(id),
                     feature_id VARCHAR(36) NOT NULL,
                     PRIMARY KEY (vehicle_id, feature_id)
+                )
+                """);
+    }
+
+    private void createVehicleImagesTable(Statement stmt) throws SQLException {
+        stmt.execute("""
+                CREATE TABLE IF NOT EXISTS vehicle_images (
+                    id VARCHAR(36) PRIMARY KEY,
+                    vehicle_id VARCHAR(36) NOT NULL REFERENCES vehicles(id),
+                    image_url VARCHAR(500) NOT NULL,
+                    is_primary BOOLEAN NOT NULL DEFAULT false,
+                    display_order INTEGER NOT NULL DEFAULT 0,
+                    alt_text VARCHAR(200),
+                    created_at TIMESTAMPTZ NOT NULL,
+                    updated_at TIMESTAMPTZ NOT NULL
                 )
                 """);
     }

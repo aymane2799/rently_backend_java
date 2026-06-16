@@ -337,37 +337,37 @@ Enables client self-registration on the agency landing page and the two-step boo
 
 ### 15.1 Client Accounts
 
-- [ ] Create `ClientAccount` entity — `firstName`, `lastName`, `email`, `phone`, `passwordHash`, `isActive`, `emailVerifiedAt`
-- [ ] Create `ClientAccountRepository` — `findByEmail`, `existsByEmail`
-- [ ] Create `ClientAccountService` — `register`, `login`
-- [ ] Implement `ClientJwtTokenProvider` — issues a separate JWT for client accounts; payload: `clientId`, `agencySlug`
-- [ ] Create `ClientAuthController` (public — `permitAll`)
-  - [ ] `POST /api/v1/public/{slug}/auth/register` — validates uniqueness of email within tenant; returns client JWT
-  - [ ] `POST /api/v1/public/{slug}/auth/login` — returns client JWT
+- [x] Create `ClientAccount` entity — `firstName`, `lastName`, `email`, `phone`, `passwordHash`, `isActive`, `emailVerifiedAt`
+- [x] Create `ClientAccountRepository` — `findByEmail`, `existsByEmail`
+- [x] Create `ClientAccountService` — `register`, `login`
+- [x] Implement `ClientJwtTokenProvider` — issues a separate JWT for client accounts; payload: `clientId`, `agencySlug`
+- [x] Create `ClientAuthController` (public — `permitAll`)
+  - [x] `POST /api/v1/public/{slug}/auth/register` — validates uniqueness of email within tenant; returns client JWT
+  - [x] `POST /api/v1/public/{slug}/auth/login` — returns client JWT
 
 ### 15.2 Booking Requests
 
-- [ ] Create `BookingRequestStatus` enum (`PENDING_CONFIRMATION`, `CONFIRMED`, `REJECTED`)
-- [ ] Create `BookingRequest` entity — all fields per architecture doc (§2.17)
-- [ ] Create `BookingRequestRepository`
-  - [ ] `findOverlapping(vehicleId, startDate, endDate)` — checks for active Reservations AND PENDING_CONFIRMATION BookingRequests in the date window
-  - [ ] `findByClientAccountId(clientId)`
-  - [ ] `findAllByStatus(status)` — for agency staff queue
-- [ ] Create `SubmitBookingRequestRequest` DTO — multipart form: `vehicleId`, `pickupHubId`, `returnHubId`, `startDate`, `endDate`, `idType` (`@ValidEnum`), `idNumber`, `driverLicenseCode`, `idDocumentFile` (multipart), `driverLicenseDocumentFile` (multipart), `notes` (optional); validate all identity fields present (`422` otherwise)
-- [ ] Create `BookingRequestResponse` DTO — includes identity field values + document URLs (for agency staff review)
-- [ ] Create `BookingRequestService`
-  - [ ] `submit(clientId, request, idDocumentFile, driverLicenseDocumentFile)` — stores uploaded files, runs availability check (overlapping Reservations + BookingRequests); throws `409` if unavailable; creates `PENDING_CONFIRMATION` record with identity fields + document URLs
-  - [ ] `confirm(requestId, agentUserId)` — `@Transactional`: upserts `Customer` record using `(idType, idNumber)` as lookup key (creates if absent, using firstName/lastName/phone/email from `ClientAccount` + identity fields from `BookingRequest`); creates `Reservation` (status=`ACTIVE`) linked to the `Customer`; creates `Payment` (amounts to be completed by agent); sets request `CONFIRMED`; populates `convertedReservationId`
-  - [ ] `reject(requestId, agentUserId, rejectionReason)` — sets `REJECTED`, records `rejectedAt`/`rejectedBy`, dispatches rejection email to `clientAccount.email`
-- [ ] Create `PublicBookingRequestController` (client JWT auth)
-  - [ ] `POST /api/v1/public/{slug}/booking-requests` — submit new booking request
-  - [ ] `GET /api/v1/public/{slug}/booking-requests` — list own booking requests (client sees own only)
-  - [ ] `GET /api/v1/public/{slug}/booking-requests/{id}` — get single booking request status
-- [ ] Create `BookingRequestController` (agency staff auth)
-  - [ ] `GET /api/v1/booking-requests` — `AGENT` / `BRANCH_MANAGER` / `AGENCY_OWNER`; list all requests, filterable by status
-  - [ ] `GET /api/v1/booking-requests/{id}` — detail view
-  - [ ] `POST /api/v1/booking-requests/{id}/confirm` — `AGENT` / `BRANCH_MANAGER` / `AGENCY_OWNER`
-  - [ ] `POST /api/v1/booking-requests/{id}/reject` — `AGENT` / `BRANCH_MANAGER` / `AGENCY_OWNER`; body: `{ rejectionReason }`
+- [x] Create `BookingRequestStatus` enum (`PENDING_CONFIRMATION`, `CONFIRMED`, `REJECTED`)
+- [x] Create `BookingRequest` entity — all fields per architecture doc (§2.17)
+- [x] Create `BookingRequestRepository`
+  - [x] `findOverlapping(vehicleId, startDate, endDate)` — checks for active Reservations AND PENDING_CONFIRMATION BookingRequests in the date window
+  - [x] `findByClientAccountId(clientId)`
+  - [x] `findAllByStatus(status)` — for agency staff queue
+- [x] Create `SubmitBookingRequestRequest` DTO — multipart form: `vehicleId`, `pickupHubId`, `returnHubId`, `startDate`, `endDate`, `idType` (`@ValidEnum`), `idNumber`, `driverLicenseCode`, `idDocumentFile` (multipart), `driverLicenseDocumentFile` (multipart), `notes` (optional); validate all identity fields present (`422` otherwise)
+- [x] Create `BookingRequestResponse` DTO — includes identity field values + document URLs (for agency staff review)
+- [x] Create `BookingRequestService`
+  - [x] `submit(clientId, request, idDocumentFile, driverLicenseDocumentFile)` — stores uploaded files, runs availability check (overlapping Reservations + BookingRequests); throws `409` if unavailable; creates `PENDING_CONFIRMATION` record with identity fields + document URLs
+  - [x] `confirm(requestId, agentUserId)` — `@Transactional`: upserts `Customer` record using `(idType, idNumber)` as lookup key (creates if absent, using firstName/lastName/phone/email from `ClientAccount` + identity fields from `BookingRequest`); creates `Reservation` (status=`ACTIVE`) linked to the `Customer`; creates `Payment` (amounts to be completed by agent); sets request `CONFIRMED`; populates `convertedReservationId`
+  - [x] `reject(requestId, agentUserId, rejectionReason)` — sets `REJECTED`, records `rejectedAt`/`rejectedBy`, dispatches rejection email to `clientAccount.email`
+- [x] Create `PublicBookingRequestController` (client JWT auth)
+  - [x] `POST /api/v1/public/{slug}/booking-requests` — submit new booking request
+  - [x] `GET /api/v1/public/{slug}/booking-requests` — list own booking requests (client sees own only)
+  - [x] `GET /api/v1/public/{slug}/booking-requests/{id}` — get single booking request status
+- [x] Create `BookingRequestController` (agency staff auth)
+  - [x] `GET /api/v1/booking-requests` — `AGENT` / `BRANCH_MANAGER` / `AGENCY_OWNER`; list all requests, filterable by status
+  - [x] `GET /api/v1/booking-requests/{id}` — detail view
+  - [x] `POST /api/v1/booking-requests/{id}/confirm` — `AGENT` / `BRANCH_MANAGER` / `AGENCY_OWNER`
+  - [x] `POST /api/v1/booking-requests/{id}/reject` — `AGENT` / `BRANCH_MANAGER` / `AGENCY_OWNER`; body: `{ rejectionReason }`
 
 ---
 
@@ -420,7 +420,7 @@ Unified event API consumed by both the date-grid calendar and the per-vehicle Ga
 | 12. Plan Quota Enforcement | 6 | 6 | 0 |
 | 13. Vehicle Image Gallery | 8 | 8 | 0 |
 | 14. Agency Branding & Public Landing Page | 10 | 10 | 0 |
-| 15. Client Accounts & Booking Requests | 19 | 0 | 19 |
+| 15. Client Accounts & Booking Requests | 19 | 19 | 0 |
 | 16. Agency Operations Dashboard | 9 | 0 | 9 |
 | 17. Calendar & Gantt Timeline View | 5 | 0 | 5 |
-| **Total** | **193** | **160** | **33** |
+| **Total** | **193** | **179** | **14** |
