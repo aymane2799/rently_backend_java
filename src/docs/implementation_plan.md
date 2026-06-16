@@ -375,16 +375,16 @@ Enables client self-registration on the agency landing page and the two-step boo
 
 All metrics computed at query time — no new persisted entity.
 
-- [ ] Create `DashboardResponse` DTO — fleet status counts, reservation counts (month/year + prior year comparisons), revenue totals, category breakdown, utilisation rate, deposit summary, `generatedAt`
-- [ ] Create `DashboardService`
-  - [ ] `getFleetStatusCounts(branchId?)` — count vehicles per `VehicleStatus`; total fleet count
-  - [ ] `getReservationCounts(branchId?)` — count reservations for current month, current year, prior month, prior year
-  - [ ] `getRevenueTotals(branchId?)` — sum `Payment.totalContractAmount` for `CLOSED` reservations in current month and current year
-  - [ ] `getVehicleCategoryBreakdown()` — count per `VehicleCategory` in fleet; identify most-rented category by closed reservation count in current year
-  - [ ] `getDepositSummary(branchId?)` — count + MAD total of `ACTIVE_HOLD` deposits; count of `RELEASED` deposits in current period
-  - [ ] `getUtilisationRate(branchId?)` — `(total rented vehicle-days in current month) ÷ (total fleet × days in month) × 100`
-- [ ] Create `DashboardController`
-  - [ ] `GET /api/v1/dashboard` — `AGENCY_OWNER` / `BRANCH_MANAGER` / `AGENT`; passes `branchId` from JWT for non-owner roles
+- [x] Create `DashboardResponse` DTO — fleet status counts, reservation counts (month/year + prior year comparisons), revenue totals, category breakdown, utilisation rate, deposit summary, `generatedAt`
+- [x] Create `DashboardService`
+  - [x] `getFleetStatusCounts(branchId?)` — count vehicles per `VehicleStatus`; total fleet count
+  - [x] `getReservationCounts(branchId?)` — count reservations for current month, current year, prior month, prior year
+  - [x] `getRevenueTotals(branchId?)` — sum `Payment.totalContractAmount` for `CLOSED` reservations in current month and current year
+  - [x] `getVehicleCategoryBreakdown()` — count per `VehicleCategory` in fleet; identify most-rented category by closed reservation count in current year
+  - [x] `getDepositSummary(branchId?)` — count + MAD total of `ACTIVE_HOLD` deposits; count of `RELEASED` deposits in current period
+  - [x] `getUtilisationRate(branchId?)` — `(total rented vehicle-days in current month) ÷ (total fleet × days in month) × 100`
+- [x] Create `DashboardController`
+  - [x] `GET /api/v1/dashboard` — `AGENCY_OWNER` / `BRANCH_MANAGER` / `AGENT`; passes `branchId` from JWT for non-owner roles
 
 ---
 
@@ -421,6 +421,6 @@ Unified event API consumed by both the date-grid calendar and the per-vehicle Ga
 | 13. Vehicle Image Gallery | 8 | 8 | 0 |
 | 14. Agency Branding & Public Landing Page | 10 | 10 | 0 |
 | 15. Client Accounts & Booking Requests | 19 | 19 | 0 |
-| 16. Agency Operations Dashboard | 9 | 0 | 9 |
+| 16. Agency Operations Dashboard | 9 | 9 | 0 |
 | 17. Calendar & Gantt Timeline View | 5 | 0 | 5 |
-| **Total** | **193** | **179** | **14** |
+| **Total** | **193** | **188** | **5** |

@@ -6,6 +6,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,6 +26,43 @@ public interface ReservationRepository extends JpaRepository<Reservation, String
 
     @Query("SELECT DISTINCT r.vehicle.id FROM Reservation r WHERE r.status = :status AND r.startDate < :to AND r.endDate > :from")
     List<String> findVehicleIdsWithOverlappingReservations(
+            @Param("status") ReservationStatus status,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to
+    );
+
+    @Query("SELECT COUNT(r) FROM Reservation r WHERE r.status IN :statuses AND r.startDate >= :from AND r.startDate < :to")
+    long countByStatusInAndStartDateBetween(
+            @Param("statuses") Collection<ReservationStatus> statuses,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to
+    );
+
+    @Query("SELECT COUNT(r) FROM Reservation r WHERE r.status IN :statuses AND r.startDate >= :from AND r.startDate < :to AND r.pickupHub.branch.id = :branchId")
+    long countByStatusInAndStartDateBetweenAndBranchId(
+            @Param("statuses") Collection<ReservationStatus> statuses,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to,
+            @Param("branchId") String branchId
+    );
+
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.vehicle WHERE r.status IN :statuses AND r.startDate < :to AND r.endDate > :from")
+    List<Reservation> findOverlappingByStatuses(
+            @Param("statuses") Collection<ReservationStatus> statuses,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to
+    );
+
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.vehicle WHERE r.status IN :statuses AND r.startDate < :to AND r.endDate > :from AND r.pickupHub.branch.id = :branchId")
+    List<Reservation> findOverlappingByStatusesAndBranchId(
+            @Param("statuses") Collection<ReservationStatus> statuses,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to,
+            @Param("branchId") String branchId
+    );
+
+    @Query("SELECT r.vehicle.modelId FROM Reservation r WHERE r.status = :status AND r.startDate >= :from AND r.startDate < :to")
+    List<String> findModelIdsByStatusAndStartDateBetween(
             @Param("status") ReservationStatus status,
             @Param("from") LocalDateTime from,
             @Param("to") LocalDateTime to
