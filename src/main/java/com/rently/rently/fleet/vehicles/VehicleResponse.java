@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -33,4 +34,5 @@ public class VehicleResponse {
     private Set<FeatureResponse> features;
     private String currentHubId;
     private String currentParkingSlot;
+    private List<VehicleImageResponse> images;
 }

@@ -38,6 +38,12 @@ This document explains the reasoning behind every major architectural and implem
 30. [ContractStatus Derived from Two Booleans](#30-contractstatus-derived-from-two-booleans)
 31. [Async Document Generation](#31-async-document-generation)
 32. [@ElementCollection for Vehicle Feature IDs](#32-elementcollection-for-vehicle-feature-ids)
+33. [Vehicle Image Gallery — VehicleImage as a Separate Entity](#33-vehicle-image-gallery--vehicleimage-as-a-separate-entity)
+34. [Agency Branding Fields — Stored on the Agency Entity](#34-agency-branding-fields--stored-on-the-agency-entity)
+35. [ClientAccount as a Tenant-Scoped Entity (not PUBLIC)](#35-clientaccount-as-a-tenant-scoped-entity-not-public)
+36. [BookingRequest vs Reservation — Two-Step Booking Flow](#36-bookingrequest-vs-reservation--two-step-booking-flow)
+37. [Dashboard Metrics — Computed at Query Time](#37-dashboard-metrics--computed-at-query-time-no-materialised-view)
+38. [Calendar View — Unified Typed Event API](#38-calendar-view--unified-typed-event-api)
 
 ---
 
@@ -1068,6 +1074,136 @@ The `vehicle_id` column has a FK to `vehicles.id` in the same tenant schema. The
 - **Keep @ManyToMany, configure public schema in tenant search_path** — would allow JPA to navigate the relationship, but exposes public-schema tables to all tenant queries. Breaks schema isolation. Rejected.
 - **Duplicate feature data into each tenant schema** — copies public features into the tenant. Keeps JPA relationships intact but introduces eventual consistency: feature name changes in the public schema don't propagate automatically. Rejected.
 - **Separate `VehicleFeature` entity with two String FKs** — explicit join entity instead of `@ElementCollection`. More control but more boilerplate for a simple join table with no extra columns.
+
+---
+
+## 33. Vehicle Image Gallery — `VehicleImage` as a Separate Entity
+
+**What we chose:** A standalone `VehicleImage` entity with `vehicleId` (FK), `imageUrl`, `isPrimary`, `displayOrder`, and `altText`. Images are not embedded in the `Vehicle` entity.
+
+**Why a separate entity and not a column on `Vehicle`:**
+
+A gallery is a collection — its size is unbounded and unknown at design time. Storing multiple image URLs on `Vehicle` would require an `@ElementCollection` (awkward for reordering and primary designation) or a JSON column (loses relational queryability). A separate entity gives you a clean row per image, making it trivial to: sort by `displayOrder`, find the primary image efficiently with an index, delete individual images, and later add metadata (captions, upload timestamps) without schema migrations.
+
+**Why `isPrimary` as a boolean and not a FK from `Vehicle`:**
+
+A FK `Vehicle.primaryImageId → vehicle_images.id` creates a circular dependency: you can't insert the `Vehicle` without the image, and you can't insert the image without the `Vehicle`. Boolean flags on the image table avoid this, at the cost of requiring an application-enforced uniqueness rule (at most one `isPrimary = true` per vehicle). The service enforces this atomically — clearing the old primary before setting the new one within a single transaction.
+
+**Alternatives considered:**
+
+- **Single `coverImageUrl` column on `Vehicle`** — sufficient only for one image. Rejected in favour of full gallery support requested in the PRD.
+- **`@ElementCollection Set<String>` on Vehicle** — works for an unordered set of URLs, but cannot carry metadata (altText, order, primary flag) per image. Rejected.
+
+---
+
+## 34. Agency Branding Fields — Stored on the `Agency` Entity
+
+**What we chose:** All landing page and SEO configuration fields (`tagline`, four colour fields, `metaTitle`, `metaDescription`, `metaKeywords`, `ogImageUrl`) are added directly to the `Agency` entity rather than a separate `AgencyBranding` entity.
+
+**Why not a separate `AgencyBranding` entity:**
+
+The `Agency` entity already represents "everything about this tenant organisation." Branding is a fixed set of nullable scalar fields with no lifecycle of its own — there is no history to track, no state machine, no one-to-many relationship. Splitting it into a separate entity would add a join to every landing page load for no benefit. The rule of thumb: extract to a related entity only when the data has its own identity, lifecycle, or multiplicity. Branding has none of these.
+
+**Why four colour fields (not two):**
+
+Light mode and dark mode require distinct colour tokens — the same blue that reads well on white degrades on near-black backgrounds. Storing all four (`primaryColor`, `secondaryColor`, `darkPrimaryColor`, `darkSecondaryColor`) lets the frontend apply the correct palette without any derivation logic. Agencies control both modes independently.
+
+**Why `metaKeywords` as a comma-separated TEXT and not an array:**
+
+PostgreSQL arrays require non-standard JPA mapping (`@Type(PostgreSQLArrayType.class)` from the Hypersistence Utilities library). A comma-separated `TEXT` column avoids the dependency, is trivially parseable by the frontend meta tag renderer, and is sufficient for the SEO use case. The field is advisory — modern search engines largely ignore it.
+
+---
+
+## 35. `ClientAccount` as a Tenant-Scoped Entity (not PUBLIC)
+
+**What we chose:** `ClientAccount` lives in the tenant schema, not the public schema. A client who wants to book with two different agencies creates two separate accounts.
+
+**Why tenant-scoped:**
+
+The PRD cites Moroccan Law 09-08 (CNDP) — customer PII must reside only within the encrypted tenant schema boundary. A `ClientAccount` contains a name, phone number, email, and password hash. Placing it in the public schema would mix this PII with platform-level administrative data and remove the physical isolation guarantee. Schema-per-tenant is the chosen isolation model; client data must stay inside it.
+
+**The UX trade-off:**
+
+A client who books with multiple agencies needs multiple accounts. This is the correct trade-off for an MVP: CNDP compliance is non-negotiable, and multi-agency clients are rare in the target market (independent regional agencies). A future platform-level client identity service could federate these accounts, but the schema-per-tenant boundary makes that non-trivial and out of scope for MVP.
+
+**`ClientAccount` is not `Customer`:**
+
+These are two distinct entities with different lifecycles:
+- `ClientAccount` — created by the client on the public landing page; contains only login credentials and contact info (email, phone, password hash). Minimal PII, no identity documents.
+- `Customer` — created automatically by the system when a `BookingRequest` is confirmed; contains full compliance identity (CIN/passport number + type, driver's licence code). This is the legal record attached to the `Reservation` and printed on the contract.
+- `BookingRequest` — the bridge: carries the identity document numbers and uploaded document scans submitted by the client at booking request time. On confirmation, the service reads these fields from the `BookingRequest` and upserts the `Customer` record — no manual agent data entry needed.
+
+The `ClientAccount` is the *portal identity*; the `Customer` is the *rental contract identity*; the `BookingRequest` is what carries compliance data from one to the other.
+
+---
+
+## 36. `BookingRequest` vs `Reservation` — Two-Step Booking Flow
+
+**What we chose:** Client-initiated bookings go through a `BookingRequest` first, which an agency agent must explicitly confirm before a `Reservation` is created. The two entities are kept separate.
+
+**Why not create a `Reservation` directly from the client portal:**
+
+A `Reservation` is a fully binding contractual record. It requires: a `Customer` record with identity documents, a formal payment breakdown, and an agency staff member's digital accountability (`createdBy`). While identity documents are now collected at `BookingRequest` submission, the payment breakdown is not — amounts, deposit type, and bank transfer references are still set by the agent after physically meeting the client. Creating a `Reservation` prematurely with a null `Payment` would compromise the data integrity that deposit tracking, document generation, and signature compliance depend on.
+
+`BookingRequest` is the pre-qualification stage: the client proves they have valid documents and the vehicle is available, but the financial contract is not yet formed.
+
+**Why identity documents are required at `BookingRequest` submission (not at `ClientAccount` registration):**
+
+Collecting documents at registration would front-load friction before the client has chosen a vehicle or dates — abandonment would be high. Collecting them at booking request time is the natural moment: the client is committed to a specific vehicle and dates, and the agency needs the documents to assess the request before confirming. The client uploads scans of their CIN/passport and driver's licence as multipart files; the URLs are stored on the `BookingRequest` for the agent to review in the staff portal.
+
+**Auto-creation of `Customer` on confirmation:**
+
+When the agent confirms, the service upserts a `Customer` using `(idType, idNumber)` as the lookup key. If a `Customer` with that ID already exists in the tenant schema (the same person has rented before), the existing record is reused and linked to the new `Reservation`. If not, a new `Customer` is created from the `BookingRequest` fields. This means confirmation is a zero-data-entry action for the agent — everything is already in the system.
+
+**Why availability is checked at `BookingRequest` submission time:**
+
+The client-facing search already filters out unavailable vehicles for the selected dates. The server-side check on submission is the second line of defence against race conditions — two clients simultaneously viewing and requesting the same vehicle. Without this check, two `BookingRequest` records for the same vehicle and overlapping dates could exist simultaneously. Both `ACTIVE` `Reservation` rows and `PENDING_CONFIRMATION` `BookingRequest` rows are checked, so a pending client request also blocks another client from requesting the same window.
+
+**State machine is intentionally terminal:**
+
+`CONFIRMED` and `REJECTED` are final states. A confirmed booking cannot be un-confirmed through the `BookingRequest` — the resulting `Reservation` is managed through `ReservationService.cancel`. This keeps the `BookingRequest` as a permanent audit record of what was originally requested, what documents were submitted, and why it was accepted.
+
+---
+
+## 37. Dashboard Metrics — Computed at Query Time (No Materialised View)
+
+**What we chose:** All dashboard figures (`DashboardService`) are computed live against the tenant's operational tables (`reservations`, `payments`, `vehicles`) on each `GET /api/v1/dashboard` call. No separate aggregation table or scheduled job maintains pre-computed totals.
+
+**Why live computation and not a materialised view or nightly job:**
+
+The agency dashboard must reflect the current state — a reservation created 10 minutes ago should appear in the count. Nightly jobs would make the dashboard stale by definition. PostgreSQL materialised views require explicit refresh commands and add DDL complexity to the per-tenant schema provisioner.
+
+Live computation is sustainable for the target fleet sizes: SAFI plan tenants have at most 15 vehicles, which bounds the reservation and payment table sizes to thousands of rows at most, not millions. Aggregate queries (`COUNT`, `SUM`, `GROUP BY`) over thousands of rows are sub-millisecond on any modern PostgreSQL instance.
+
+**Why not cache the dashboard response:**
+
+The dashboard is the primary operational tool for branch managers who check it throughout the shift. Serving a cached response that doesn't reflect the last reservation closed would undermine trust in the numbers. Dashboard queries are cheap enough to run live.
+
+**If the fleet grows large enough to make queries slow:**
+
+The correct escalation path is a database-side materialised view refreshed on a short interval (e.g., 5 minutes via `pg_cron`), not application-side caching. This keeps the computation in PostgreSQL where it can be indexed efficiently, and the refresh can be triggered transactionally on write rather than on a timer.
+
+---
+
+## 38. Calendar View — Unified Typed Event API
+
+**What we chose:** A single `GET /api/v1/calendar/events?from=&to=` endpoint returns a polymorphic list of typed event objects (`RESERVATION`, `BOOKING_REQUEST`, `INSURANCE_EXPIRY`) that the frontend uses to render both the date-grid calendar and the per-vehicle Gantt timeline.
+
+**Why one endpoint for both calendar views:**
+
+Both the date-grid and the Gantt timeline need the same underlying data — reservations, pending requests, and expiry events — for the same date range. Fetching them separately would double the round-trips and require the frontend to merge two lists. A single endpoint is simpler to cache (one cache key per `from`/`to`/`branchId` tuple) and simpler to reason about.
+
+**Why a discriminated union shape (type + metadata map) rather than separate response types:**
+
+Different calendar event types have different fields: a `RESERVATION` event has `customerName` and `status`, while an `INSURANCE_EXPIRY` event has `daysRemaining`. Rather than a separate DTO class per type (which would require a polymorphic JSON deserializer on the frontend), we use a single flat `CalendarEventResponse` with a `type` discriminator and a `metadata` map for type-specific fields. The frontend switches on `type` to render the appropriate colour and tooltip.
+
+**Why the maximum range is capped at 366 days:**
+
+The Gantt timeline loads one row per vehicle across the requested date range. For a CHAMIL plan agency with an unlimited fleet, a multi-year query could return thousands of overlapping blocks. The 366-day cap limits the data volume to one year, which is the realistic planning horizon for a car rental agency and keeps queries predictably fast without pagination complexity.
+
+**`INSURANCE_EXPIRY` events are derived, not stored separately:**
+
+Insurance expiry dates are already stored on `Vehicle.insuranceExpiresAt`. The calendar service reads vehicles whose `insuranceExpiresAt` falls within the requested date window and maps them to `INSURANCE_EXPIRY` events. No separate event table is needed. The 30-day warning threshold (highlighted in amber on the frontend) is a display concern — the API always returns the exact `expiresAt` date and a `daysRemaining` integer so the frontend can apply its own colouring logic.
 
 ---
 

@@ -45,9 +45,18 @@ A tenant organisation (car rental agency). Created atomically when an `AgencyReg
 | `city`          | `String`       | `city`            | NOT NULL                                 |
 | `address`       | `String`       | `address`         | nullable                                 |
 | `website`       | `String`       | `website`         | nullable                                 |
-| `logo`          | `String`       | `logo`            | nullable — file path / URL               |
-| `coverImage`    | `String`       | `cover_image`     | nullable — file path / URL               |
-| `status`        | `AgencyStatus` | `status`          | NOT NULL, STRING enum, default `APPROVED` |
+| `logo`                | `String`       | `logo`                  | nullable — file path / URL               |
+| `coverImage`          | `String`       | `cover_image`           | nullable — file path / URL               |
+| `tagline`             | `String`       | `tagline`               | nullable, len≤200 — short marketing blurb for landing page |
+| `primaryColor`        | `String`       | `primary_color`         | nullable, len≤7 — hex colour, light mode primary (e.g. `#2563eb`) |
+| `secondaryColor`      | `String`       | `secondary_color`       | nullable, len≤7 — hex colour, light mode secondary |
+| `darkPrimaryColor`    | `String`       | `dark_primary_color`    | nullable, len≤7 — hex colour, dark mode primary |
+| `darkSecondaryColor`  | `String`       | `dark_secondary_color`  | nullable, len≤7 — hex colour, dark mode secondary |
+| `metaTitle`           | `String`       | `meta_title`            | nullable, len≤70 — SEO `<title>` tag     |
+| `metaDescription`     | `String`       | `meta_description`      | nullable, len≤160 — SEO meta description |
+| `metaKeywords`        | `String`       | `meta_keywords`         | nullable, TEXT — comma-separated SEO keywords |
+| `ogImageUrl`          | `String`       | `og_image_url`          | nullable — Open Graph image for social sharing previews |
+| `status`              | `AgencyStatus` | `status`                | NOT NULL, STRING enum, default `APPROVED` |
 | `approvedAt`    | `Instant`      | `approved_at`     | NOT NULL — set when `AgencyRegistration` is approved |
 | `plan`          | `SubscriptionPlan` | `plan_id`         | nullable, FK → `subscription_plans.id` — assigned on approval |
 
@@ -442,7 +451,106 @@ Full payment and deposit breakdown for a single reservation (AC-4.1, AC-4.2). On
 
 ---
 
-### 2.15 `AgencyRegistration` [PUBLIC]
+### 2.15 `VehicleImage` [TENANT]
+
+**Table:** `vehicle_images` | **Module:** `fleet`
+
+One image in a vehicle's photo gallery. Each vehicle may have zero or more images; exactly one should be designated as the primary (cover) image. `displayOrder` controls the rendering order in the gallery.
+
+| Field          | Type      | Column           | Constraints / Default                              |
+|----------------|-----------|------------------|----------------------------------------------------|
+| `vehicleId`    | `String`  | `vehicle_id`     | NOT NULL, FK → `vehicles.id`                       |
+| `imageUrl`     | `String`  | `image_url`      | NOT NULL — compressed upload URL                   |
+| `isPrimary`    | `boolean` | `is_primary`     | NOT NULL, default `false`                          |
+| `displayOrder` | `Integer` | `display_order`  | NOT NULL, default `0`                              |
+| `altText`      | `String`  | `alt_text`       | nullable, len≤200 — accessible image description   |
+
+**Business rule:** at most one `VehicleImage` row per `vehicleId` may have `isPrimary = true`. Setting a new image as primary must atomically clear the flag on the previous primary.
+
+**Relationships**
+
+| Type        | Target    | FK           | Notes  |
+| ----------- | --------- | ------------ | ------ |
+| Many-to-One | `Vehicle` | `vehicle_id` | LAZY   |
+
+---
+
+### 2.16 `ClientAccount` [TENANT]
+
+**Table:** `client_accounts` | **Module:** `reservation`
+
+A public-facing client who has registered on an agency's landing page. Client accounts are tenant-scoped: a client who wants to book with two agencies creates two separate accounts, one per agency. Identity documents (CIN, driver's licence) are **not** stored here — they are collected by the agency agent when a `BookingRequest` is confirmed and a full `Reservation` is created.
+
+| Field             | Type      | Column              | Constraints / Default                           |
+|-------------------|-----------|---------------------|-------------------------------------------------|
+| `firstName`       | `String`  | `first_name`        | NOT NULL                                        |
+| `lastName`        | `String`  | `last_name`         | NOT NULL                                        |
+| `email`           | `String`  | `email`             | NOT NULL, UNIQUE within tenant schema           |
+| `phone`           | `String`  | `phone`             | NOT NULL                                        |
+| `passwordHash`    | `String`  | `password_hash`     | NOT NULL                                        |
+| `isActive`        | `boolean` | `is_active`         | NOT NULL, default `true`                        |
+| `emailVerifiedAt` | `Instant` | `email_verified_at` | nullable — set on email verification (optional for MVP) |
+
+**Relationships**
+
+| Type        | Target          | FK                          | Notes |
+| ----------- | --------------- | --------------------------- | ----- |
+| One-to-Many | `BookingRequest`| `booking_request.client_id` | —     |
+
+---
+
+### 2.17 `BookingRequest` [TENANT]
+
+**Table:** `booking_requests` | **Module:** `reservation`
+
+A client-initiated reservation inquiry, submitted through the public agency landing page. Distinct from `Reservation`: it represents an *intent to book*, not a confirmed booking. Availability is validated at submission time. On agency confirmation the system atomically creates a `Reservation` + `Payment` record and links it here.
+
+| Field                    | Type                   | Column                      | Constraints / Default                                  |
+|--------------------------|------------------------|-----------------------------|--------------------------------------------------------|
+| `clientAccount`              | `ClientAccount`        | `client_id`                    | NOT NULL, FK → `client_accounts.id`                     |
+| `vehicle`                    | `Vehicle`              | `vehicle_id`                   | NOT NULL, FK → `vehicles.id`                            |
+| `pickupHub`                  | `Hub`                  | `pickup_hub_id`                | NOT NULL, FK → `hubs.id`                                |
+| `returnHub`                  | `Hub`                  | `return_hub_id`                | NOT NULL, FK → `hubs.id`                                |
+| `startDate`                  | `LocalDateTime`        | `start_date`                   | NOT NULL                                                |
+| `endDate`                    | `LocalDateTime`        | `end_date`                     | NOT NULL                                                |
+| `idType`                     | `IdType`               | `id_type`                      | NOT NULL, STRING enum — `CIN` or `PASSPORT`             |
+| `idNumber`                   | `String`               | `id_number`                    | NOT NULL — identity document number                     |
+| `driverLicenseCode`          | `String`               | `driver_license_code`          | NOT NULL — Permis de Conduire alphanumeric code         |
+| `idDocumentUrl`              | `String`               | `id_document_url`              | NOT NULL — URL of uploaded ID scan/PDF                  |
+| `driverLicenseDocumentUrl`   | `String`               | `driver_license_document_url`  | NOT NULL — URL of uploaded driver's licence scan/PDF    |
+| `status`                     | `BookingRequestStatus` | `status`                       | NOT NULL, STRING enum, default `PENDING_CONFIRMATION`   |
+| `notes`                      | `String`               | `notes`                        | nullable, TEXT — free-text note from the client         |
+| `rejectionReason`            | `String`               | `rejection_reason`             | nullable, TEXT — required when status = `REJECTED`      |
+| `confirmedBy`                | `String`               | `confirmed_by`                 | nullable — UUID of the `User` who confirmed             |
+| `confirmedAt`                | `Instant`              | `confirmed_at`                 | nullable — set on confirmation                          |
+| `rejectedBy`                 | `String`               | `rejected_by`                  | nullable — UUID of the `User` who rejected              |
+| `rejectedAt`                 | `Instant`              | `rejected_at`                  | nullable — set on rejection                             |
+| `convertedReservationId`     | `String`               | `converted_reservation_id`     | nullable — UUID of the created `Reservation` on confirm |
+
+**State machine**
+
+```
+PENDING_CONFIRMATION ──► CONFIRMED  (Reservation + Payment created atomically; convertedReservationId populated)
+         │
+         └──► REJECTED  (rejectionReason required; rejection email dispatched to client)
+```
+
+**Identity documents required at submission:** `idType`, `idNumber`, `driverLicenseCode`, `idDocumentUrl`, and `driverLicenseDocumentUrl` are all mandatory on `BookingRequest` creation. The API rejects with `422` if any is absent. On confirmation, the service derives a `Customer` record from these fields (plus contact data from the linked `ClientAccount`) without any additional agent data entry.
+
+**Availability constraint:** the submission API must reject with `409 CONFLICT` if any `ACTIVE` `Reservation` or `PENDING_CONFIRMATION` `BookingRequest` overlaps `[startDate, endDate)` for the same `vehicleId`.
+
+**Relationships**
+
+| Type        | Target          | FK              | Notes  |
+| ----------- | --------------- | --------------- | ------ |
+| Many-to-One | `ClientAccount` | `client_id`     | LAZY   |
+| Many-to-One | `Vehicle`       | `vehicle_id`    | LAZY   |
+| Many-to-One | `Hub`           | `pickup_hub_id` | LAZY   |
+| Many-to-One | `Hub`           | `return_hub_id` | LAZY   |
+
+---
+
+### 2.18 `AgencyRegistration` [PUBLIC]
 
 **Table:** `agency_registrations` | **Module:** `agency`
 
@@ -574,6 +682,22 @@ Used by: `Subscription.status`
 Values: `CIN` · `PASSPORT`
 Used by: `Customer.idType`
 > Combined with `idNumber` as a unique pair — eliminates the two-column nullable pattern.
+
+---
+
+### Public Landing Page & Booking
+
+**`BookingRequestStatus`**
+Values: `PENDING_CONFIRMATION` · `CONFIRMED` · `REJECTED`
+Used by: `BookingRequest.status`
+
+---
+
+### Calendar
+
+**`CalendarEventType`**
+Values: `RESERVATION` · `BOOKING_REQUEST` · `INSURANCE_EXPIRY`
+Used by: `CalendarEventResponse.type` (response DTO only — not persisted)
 
 ---
 
@@ -1092,6 +1216,30 @@ Each domain that serves both `SUPER_ADMIN` and agency roles uses **two controlle
 | Controller | Path | Caller | Notes |
 | ---------- | ---- | ------ | ----- |
 | `VehicleController` | `/api/v1/vehicles` | Agency roles | Tenant-scoped; no admin cross-tenant reads needed |
+| `VehicleImageController` | `/api/v1/vehicles/{vehicleId}/images` | `AGENCY_OWNER` / `BRANCH_MANAGER` | Upload, delete, reorder, set primary |
+
+#### `dashboard/`
+| Controller | Path | Caller | Notes |
+| ---------- | ---- | ------ | ----- |
+| `DashboardController` | `/api/v1/dashboard` | `AGENCY_OWNER` / `BRANCH_MANAGER` / `AGENT` | All metrics in one response; branch-scoped for non-owners |
+
+#### `public/` (no auth — landing page)
+| Controller | Path | Caller | Notes |
+| ---------- | ---- | ------ | ----- |
+| `PublicAgencyController` | `/api/v1/public/{slug}` | Anonymous | Agency info + branding; available vehicle listing + search |
+| `PublicClientAuthController` | `/api/v1/public/{slug}/auth` | Anonymous | Client register (`POST /register`), client login (`POST /login`) |
+| `PublicBookingRequestController` | `/api/v1/public/{slug}/booking-requests` | Client JWT | Submit booking request (`POST`), list own requests (`GET`) |
+| `PublicQrCodeController` | `/api/v1/agencies/{slug}/qr-code` | Any authenticated | Returns QR code PNG for the agency's landing page URL |
+
+#### `reservation/` — booking request management (agency staff)
+| Controller | Path | Caller | Notes |
+| ---------- | ---- | ------ | ----- |
+| `BookingRequestController` | `/api/v1/booking-requests` | `AGENT` / `BRANCH_MANAGER` / `AGENCY_OWNER` | List, confirm, reject client booking requests |
+
+#### `calendar/`
+| Controller | Path | Caller | Notes |
+| ---------- | ---- | ------ | ----- |
+| `CalendarController` | `/api/v1/calendar/events` | `AGENCY_OWNER` / `BRANCH_MANAGER` / `AGENT` | Returns typed event list for a date range; branch-scoped for non-owners |
 
 ### 9.3 Service Split Rule
 

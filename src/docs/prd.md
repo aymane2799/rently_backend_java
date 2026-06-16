@@ -221,6 +221,100 @@ Due to credit card billing friction common among small businesses in Morocco, au
 
 ---
 
+### Module 3.7 — Agency Operations Dashboard
+
+**Problem:** Agency owners and managers lack a real-time consolidated view of fleet performance and business health. Decisions about vehicle procurement, pricing, and staffing are currently made from memory or manual counting rather than data.
+
+**User Stories**
+
+- As an Agency Owner / Branch Manager, I want a real-time fleet status breakdown, so that I can instantly assess operational state without calling staff.
+- As an Agency Owner, I want to see monthly and yearly reservation counts and revenue totals, so that I can track business performance over time.
+- As an Agency Owner, I want to see vehicle category distribution and the most-rented category, so that I can make informed fleet procurement decisions.
+- As an Agency Owner / Branch Manager, I want to see a deposit summary (active holds vs released, total value held), so that I can monitor collateral exposure at shift handover.
+
+**Acceptance Criteria**
+
+- **AC-7.1** — The dashboard must display fleet status counts: total vehicles, available, rented, under maintenance, and pending relocation — scoped to the authenticated user's branch for Branch Managers and Agents, or the full agency for Owners.
+- **AC-7.2** — The dashboard must display reservation counts (total bookings created) for the current calendar month and the current calendar year, each with a comparison figure for the same period in the prior year.
+- **AC-7.3** — The dashboard must display revenue totals (sum of `Payment.totalContractAmount` across `CLOSED` reservations) for the current month and the current year.
+- **AC-7.4** — The dashboard must display vehicle category distribution: count per `VehicleCategory` type and the category with the highest number of completed rentals in the current year.
+- **AC-7.5** — The dashboard must display a deposit summary: count and total MAD value of deposits with status `ACTIVE_HOLD`, and count of `RELEASED` deposits for the current period.
+- **AC-7.6** — The vehicle utilisation rate must be computed as `(total rented vehicle-days ÷ total possible vehicle-days in period) × 100`. The period displayed is the current calendar month.
+- **AC-7.7** — All dashboard metrics must be served from a single `GET /api/v1/dashboard` endpoint. The response must include a `generatedAt` timestamp. No new persisted entity is required — all figures are computed at query time.
+
+---
+
+### Module 3.8 — Public Agency Landing Page & Client Portal
+
+**Problem:** Agencies have no digital storefront. Prospective clients must phone or visit in person to check vehicle availability. Agency owners cannot share their fleet online or accept pre-qualified reservation inquiries outside of business hours.
+
+**User Stories**
+
+- As an Agency Owner, I want a public-facing landing page auto-generated for my agency at a stable URL, so that I can share it with clients via link or QR code without building a website.
+- As an Agency Owner, I want to customise my landing page with brand colours (light and dark mode variants), a tagline, and SEO metadata, so that the page reflects my business identity.
+- As a Client, I want to browse available vehicles on an agency's public page without logging in, so that I can evaluate the fleet before committing.
+- As a Client, I want to create a lightweight account (email + phone + password) on the agency's page, so that I can submit reservation requests and track their status.
+- As a Client, I want to request a reservation for a specific available vehicle and date range, and to receive confirmation that the vehicle is actually free for those dates before my request is submitted.
+- As an Agency Agent / Owner, I want to review incoming client booking requests and confirm or reject each one with an optional reason, so that I control which bookings are formally accepted into the system.
+- As a Client, I want to receive an email when my booking request is rejected (with the stated reason), so that I can adjust my request and re-submit.
+
+**Acceptance Criteria**
+
+- **AC-8.1** — The agency landing page must be accessible at `/public/{agency-slug}` without authentication. It must display the agency name, logo, tagline, and apply the agency's brand colours (primary and secondary, with dark mode variants).
+- **AC-8.2** — The landing page must list all vehicles with `status = AVAILABLE`, showing the model name, category, daily rate, primary image, and up to five key features.
+- **AC-8.3** — The landing page must support real-time vehicle filtering by desired date range, vehicle category, and transmission type. Only vehicles that have no overlapping active reservation or pending `BookingRequest` for the selected dates may appear as available.
+- **AC-8.4** — A client must be able to register with email, phone number, and password only. Identity documents are NOT required at account registration.
+- **AC-8.5** — When submitting a `BookingRequest`, the client must provide: identity document type (`CIN` or `PASSPORT`), the corresponding ID number, driver's licence code, an uploaded scan or PDF of the identity document, and an uploaded scan or PDF of the driver's licence. All five fields are mandatory. The API must reject the submission with `422 UNPROCESSABLE_ENTITY` if any is absent. Uploaded files are stored server-side and the resulting URLs persisted on the `BookingRequest`.
+- **AC-8.6** — A client may submit a `BookingRequest` only if no active `Reservation` or `PENDING_CONFIRMATION` `BookingRequest` overlaps the requested date range for that vehicle. The API must enforce this check and return a `409 CONFLICT` if the vehicle is unavailable.
+- **AC-8.7** — On agency confirmation of a `BookingRequest`, the system must atomically: derive and create a `Customer` record from the identity fields already stored on the `BookingRequest` (firstName + lastName + phone + email from the linked `ClientAccount`; idType + idNumber + driverLicenseCode from the `BookingRequest`) if no matching `Customer` already exists for that `(idType, idNumber)` pair, create a full `Reservation` record (status `ACTIVE`) linked to that `Customer`, create a linked `Payment` record (amounts to be completed by the agent), set `BookingRequest.status = CONFIRMED`, and populate `convertedReservationId`. No manual identity data entry is required from the agent.
+- **AC-8.8** — On agency rejection of a `BookingRequest`, the system must set `BookingRequest.status = REJECTED`, persist the `rejectionReason`, record `rejectedAt` and `rejectedBy`, and dispatch a rejection email to the client's registered email address containing the stated reason.
+- **AC-8.9** — The system must generate a QR code PNG image for each agency's landing page URL on demand via `GET /api/v1/agencies/{slug}/qr-code`, returning the image as `image/png`. No QR image is persisted — it is generated in-process per request.
+- **AC-8.10** — The `Agency` entity must store the following landing page and branding fields: `primaryColor`, `secondaryColor`, `darkPrimaryColor`, `darkSecondaryColor` (hex strings), `tagline` (max 200 chars), `metaTitle` (max 70 chars), `metaDescription` (max 160 chars), `metaKeywords` (TEXT, comma-separated), and `ogImageUrl` (Open Graph image for social sharing previews).
+
+**Booking Request State Machine**
+
+```
+[Client submits request — availability pre-validated]
+                  │
+                  ▼
+     ┌────────────────────────┐
+     │   PENDING_CONFIRMATION │
+     └────────────┬───────────┘
+                  │
+         ┌────────┴────────┐
+         │                 │
+         ▼                 ▼
+   ┌──────────┐      ┌──────────┐
+   │ CONFIRMED│      │ REJECTED │ (reason stored; rejection email sent)
+   └──────────┘      └──────────┘
+   Reservation + Payment
+   created atomically
+```
+
+---
+
+### Module 3.9 — Calendar & Gantt Timeline View
+
+**Problem:** Agency staff have no visual timeline to track when vehicles are booked, returning, or approaching critical dates like insurance renewals. Scheduling gaps and missed compliance deadlines create both operational and legal risk.
+
+**User Stories**
+
+- As an Agency Owner / Branch Manager, I want a date-grid calendar view showing all reservations and insurance expiry events, so that I can spot upcoming deadlines and scheduling conflicts at a glance.
+- As an Agency Owner / Branch Manager, I want a per-vehicle Gantt timeline showing each vehicle's occupied and free windows across a date range, so that I can visually assess fleet availability when a client enquires.
+
+**Acceptance Criteria**
+
+- **AC-9.1** — The calendar must support month, week, and day grid views. Each reservation event must show: customer full name, vehicle licence plate, and the start/end date. Insurance expiry events must show: vehicle licence plate and expiry date, highlighted in a warning colour when within 30 days.
+- **AC-9.2** — The Gantt timeline must display one row per vehicle. Reservation blocks span `startDate` to `endDate` and must use distinct colours for `ACTIVE` reservations vs `PENDING_CONFIRMATION` booking requests. Hovering a block must show a tooltip with: customer name (or "Pending client request"), hub names, and total amount.
+- **AC-9.3** — A backend endpoint `GET /api/v1/calendar/events?from={date}&to={date}` must return a typed event list with the following event shapes:
+  - `RESERVATION` — `{ type, reservationId, vehicleId, vehiclePlate, customerName, startDate, endDate, status }`
+  - `BOOKING_REQUEST` — `{ type, bookingRequestId, vehicleId, vehiclePlate, clientName, startDate, endDate }`
+  - `INSURANCE_EXPIRY` — `{ type, vehicleId, vehiclePlate, expiresAt, daysRemaining }`
+- **AC-9.4** — Responses must be scoped to the authenticated user's branch for `BRANCH_MANAGER` and `AGENT` roles, and to the full agency for `AGENCY_OWNER`.
+- **AC-9.5** — The `from`/`to` query parameters are mandatory; the API must return `400 BAD REQUEST` if either is absent or if `from > to`. Maximum range is 366 days.
+
+---
+
 ## 6. Success Metrics & KPIs
 
 | Metric                                 | Target                                                                           |

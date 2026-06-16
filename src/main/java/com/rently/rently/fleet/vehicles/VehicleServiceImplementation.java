@@ -20,17 +20,24 @@ public class VehicleServiceImplementation implements VehicleService {
     private final VehicleHydrator hydrator;
     private final PublicCatalogService publicCatalogService;
     private final QuotaService quotaService;
+    private final VehicleImageService imageService;
 
     @Override
     public List<VehicleResponse> getAll() {
-        return repository.findAll().stream().map(vehicleMapper::toResponse).toList();
+        return repository.findAll().stream().map(this::toResponseWithImages).toList();
     }
 
     @Override
     public VehicleResponse get(String id) {
         final Vehicle vehicle = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Vehicle with id " + id + " not found!"));
-        return vehicleMapper.toResponse(vehicle);
+        return toResponseWithImages(vehicle);
+    }
+
+    private VehicleResponse toResponseWithImages(Vehicle vehicle) {
+        VehicleResponse response = vehicleMapper.toResponse(vehicle);
+        response.setImages(imageService.getByVehicleId(vehicle.getId()));
+        return response;
     }
 
     @Override
@@ -53,7 +60,7 @@ public class VehicleServiceImplementation implements VehicleService {
         }
 
         final VehicleHydrationContext context = hydrator.hydrate(request);
-        return vehicleMapper.toResponse(repository.save(vehicleMapper.toEntity(request, context)));
+        return toResponseWithImages(repository.save(vehicleMapper.toEntity(request, context)));
     }
 
     @Override

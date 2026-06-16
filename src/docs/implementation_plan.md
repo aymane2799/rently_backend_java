@@ -289,6 +289,119 @@ Centralised quota guard called from Branch, Hub, and Vehicle service layers.
 
 ---
 
+## 13. Vehicle Image Gallery
+
+Adds a photo gallery to each vehicle with primary-image designation and display ordering.
+
+- [x] Create `VehicleImage` entity — `vehicleId`, `imageUrl`, `isPrimary`, `displayOrder`, `altText`
+- [x] Create `VehicleImageRepository` — `findByVehicleIdOrderByDisplayOrder`, `findPrimaryByVehicleId`
+- [x] Create `VehicleImageService`
+  - [x] `upload` — saves compressed image URL, default `isPrimary=false`
+  - [x] `setPrimary` — atomically clears existing primary flag then sets new one
+  - [x] `delete` — removes image; if deleted image was primary, promotes the lowest-order remaining image
+  - [x] `reorder` — accepts ordered list of image IDs, reassigns `displayOrder` values
+- [x] Create `VehicleImageResponse` DTO — `id`, `imageUrl`, `isPrimary`, `displayOrder`, `altText`
+- [x] *(update)* `VehicleResponse` — add `List<VehicleImageResponse> images`
+- [x] Create `VehicleImageController`
+  - [x] `POST /api/v1/vehicles/{vehicleId}/images` — `AGENCY_OWNER` / `BRANCH_MANAGER`; body: multipart image upload
+  - [x] `DELETE /api/v1/vehicles/{vehicleId}/images/{imageId}` — `AGENCY_OWNER` / `BRANCH_MANAGER`
+  - [x] `PATCH /api/v1/vehicles/{vehicleId}/images/{imageId}/set-primary` — `AGENCY_OWNER` / `BRANCH_MANAGER`
+  - [x] `PATCH /api/v1/vehicles/{vehicleId}/images/reorder` — `AGENCY_OWNER` / `BRANCH_MANAGER`; body: ordered list of image IDs
+
+---
+
+## 14. Agency Branding & Public Landing Page
+
+Adds branding configuration to `Agency` and exposes the public-facing landing page endpoints.
+
+- [ ] *(update)* `Agency` entity — add `tagline`, `primaryColor`, `secondaryColor`, `darkPrimaryColor`, `darkSecondaryColor`, `metaTitle`, `metaDescription`, `metaKeywords`, `ogImageUrl`
+- [ ] Create `UpdateAgencyBrandingRequest` DTO — all nine branding fields, all optional
+- [ ] Create `AgencyBrandingController`
+  - [ ] `GET /api/v1/settings/agency/branding` — `AGENCY_OWNER`; returns current branding fields
+  - [ ] `PATCH /api/v1/settings/agency/branding` — `AGENCY_OWNER`; updates branding fields → `204 NO_CONTENT`
+- [ ] Add ZXing (`com.google.zxing`) dependency for QR code generation
+- [ ] Implement `QrCodeService.generatePng(url, sizePixels)` — generates QR code as `byte[]`
+- [ ] Create `PublicQrCodeController`
+  - [ ] `GET /api/v1/agencies/{slug}/qr-code` — any authenticated; returns `image/png` of the agency's landing page URL
+- [ ] Create `PublicAgencyController` (no auth — `permitAll`)
+  - [ ] `GET /api/v1/public/{slug}` — returns `AgencyPublicProfileResponse` (name, logo, tagline, branding colours, SEO metadata)
+  - [ ] `GET /api/v1/public/{slug}/vehicles` — returns available vehicles with optional query params: `from`, `to` (date range), `category`, `transmission`; enforces availability check when date params provided
+- [ ] Create `AgencyPublicProfileResponse` DTO — all public-facing agency fields including branding and SEO
+- [ ] Create `PublicVehicleResponse` DTO — model name, category, transmission, daily rate, seats, features, primary image URL
+
+---
+
+## 15. Client Accounts & Booking Requests
+
+Enables client self-registration on the agency landing page and the two-step booking request lifecycle.
+
+### 15.1 Client Accounts
+
+- [ ] Create `ClientAccount` entity — `firstName`, `lastName`, `email`, `phone`, `passwordHash`, `isActive`, `emailVerifiedAt`
+- [ ] Create `ClientAccountRepository` — `findByEmail`, `existsByEmail`
+- [ ] Create `ClientAccountService` — `register`, `login`
+- [ ] Implement `ClientJwtTokenProvider` — issues a separate JWT for client accounts; payload: `clientId`, `agencySlug`
+- [ ] Create `ClientAuthController` (public — `permitAll`)
+  - [ ] `POST /api/v1/public/{slug}/auth/register` — validates uniqueness of email within tenant; returns client JWT
+  - [ ] `POST /api/v1/public/{slug}/auth/login` — returns client JWT
+
+### 15.2 Booking Requests
+
+- [ ] Create `BookingRequestStatus` enum (`PENDING_CONFIRMATION`, `CONFIRMED`, `REJECTED`)
+- [ ] Create `BookingRequest` entity — all fields per architecture doc (§2.17)
+- [ ] Create `BookingRequestRepository`
+  - [ ] `findOverlapping(vehicleId, startDate, endDate)` — checks for active Reservations AND PENDING_CONFIRMATION BookingRequests in the date window
+  - [ ] `findByClientAccountId(clientId)`
+  - [ ] `findAllByStatus(status)` — for agency staff queue
+- [ ] Create `SubmitBookingRequestRequest` DTO — multipart form: `vehicleId`, `pickupHubId`, `returnHubId`, `startDate`, `endDate`, `idType` (`@ValidEnum`), `idNumber`, `driverLicenseCode`, `idDocumentFile` (multipart), `driverLicenseDocumentFile` (multipart), `notes` (optional); validate all identity fields present (`422` otherwise)
+- [ ] Create `BookingRequestResponse` DTO — includes identity field values + document URLs (for agency staff review)
+- [ ] Create `BookingRequestService`
+  - [ ] `submit(clientId, request, idDocumentFile, driverLicenseDocumentFile)` — stores uploaded files, runs availability check (overlapping Reservations + BookingRequests); throws `409` if unavailable; creates `PENDING_CONFIRMATION` record with identity fields + document URLs
+  - [ ] `confirm(requestId, agentUserId)` — `@Transactional`: upserts `Customer` record using `(idType, idNumber)` as lookup key (creates if absent, using firstName/lastName/phone/email from `ClientAccount` + identity fields from `BookingRequest`); creates `Reservation` (status=`ACTIVE`) linked to the `Customer`; creates `Payment` (amounts to be completed by agent); sets request `CONFIRMED`; populates `convertedReservationId`
+  - [ ] `reject(requestId, agentUserId, rejectionReason)` — sets `REJECTED`, records `rejectedAt`/`rejectedBy`, dispatches rejection email to `clientAccount.email`
+- [ ] Create `PublicBookingRequestController` (client JWT auth)
+  - [ ] `POST /api/v1/public/{slug}/booking-requests` — submit new booking request
+  - [ ] `GET /api/v1/public/{slug}/booking-requests` — list own booking requests (client sees own only)
+  - [ ] `GET /api/v1/public/{slug}/booking-requests/{id}` — get single booking request status
+- [ ] Create `BookingRequestController` (agency staff auth)
+  - [ ] `GET /api/v1/booking-requests` — `AGENT` / `BRANCH_MANAGER` / `AGENCY_OWNER`; list all requests, filterable by status
+  - [ ] `GET /api/v1/booking-requests/{id}` — detail view
+  - [ ] `POST /api/v1/booking-requests/{id}/confirm` — `AGENT` / `BRANCH_MANAGER` / `AGENCY_OWNER`
+  - [ ] `POST /api/v1/booking-requests/{id}/reject` — `AGENT` / `BRANCH_MANAGER` / `AGENCY_OWNER`; body: `{ rejectionReason }`
+
+---
+
+## 16. Agency Operations Dashboard
+
+All metrics computed at query time — no new persisted entity.
+
+- [ ] Create `DashboardResponse` DTO — fleet status counts, reservation counts (month/year + prior year comparisons), revenue totals, category breakdown, utilisation rate, deposit summary, `generatedAt`
+- [ ] Create `DashboardService`
+  - [ ] `getFleetStatusCounts(branchId?)` — count vehicles per `VehicleStatus`; total fleet count
+  - [ ] `getReservationCounts(branchId?)` — count reservations for current month, current year, prior month, prior year
+  - [ ] `getRevenueTotals(branchId?)` — sum `Payment.totalContractAmount` for `CLOSED` reservations in current month and current year
+  - [ ] `getVehicleCategoryBreakdown()` — count per `VehicleCategory` in fleet; identify most-rented category by closed reservation count in current year
+  - [ ] `getDepositSummary(branchId?)` — count + MAD total of `ACTIVE_HOLD` deposits; count of `RELEASED` deposits in current period
+  - [ ] `getUtilisationRate(branchId?)` — `(total rented vehicle-days in current month) ÷ (total fleet × days in month) × 100`
+- [ ] Create `DashboardController`
+  - [ ] `GET /api/v1/dashboard` — `AGENCY_OWNER` / `BRANCH_MANAGER` / `AGENT`; passes `branchId` from JWT for non-owner roles
+
+---
+
+## 17. Calendar & Gantt Timeline View
+
+Unified event API consumed by both the date-grid calendar and the per-vehicle Gantt timeline on the frontend.
+
+- [ ] Create `CalendarEventType` enum (`RESERVATION`, `BOOKING_REQUEST`, `INSURANCE_EXPIRY`)
+- [ ] Create `CalendarEventResponse` DTO — `type`, `id`, `vehicleId`, `vehiclePlate`, `startDate`, `endDate`, `title`, `metadata` (map for type-specific fields: customerName, status, daysRemaining, etc.)
+- [ ] Create `CalendarService`
+  - [ ] `getEvents(from, to, branchId?)` — queries `Reservation` (ACTIVE/CLOSED), `BookingRequest` (PENDING_CONFIRMATION), and `Vehicle.insuranceExpiresAt`; maps each to a typed `CalendarEventResponse`
+  - [ ] Validates that `from ≤ to` and range ≤ 366 days; throws `400` otherwise
+- [ ] Create `CalendarController`
+  - [ ] `GET /api/v1/calendar/events?from={date}&to={date}` — `AGENCY_OWNER` / `BRANCH_MANAGER` / `AGENT`; branch-scoped for non-owner roles; returns `List<CalendarEventResponse>`
+
+---
+
 ## Progress Summary
 
 | Section | Total | Done | Remaining |
@@ -305,4 +418,9 @@ Centralised quota guard called from Branch, Hub, and Vehicle service layers.
 | 10. Signatures & Contract Compliance | 3 | 3 | 0 |
 | 11. Document Generation | 9 | 9 | 0 |
 | 12. Plan Quota Enforcement | 6 | 6 | 0 |
-| **Total** | **142** | **142** | **0** |
+| 13. Vehicle Image Gallery | 8 | 8 | 0 |
+| 14. Agency Branding & Public Landing Page | 10 | 0 | 10 |
+| 15. Client Accounts & Booking Requests | 19 | 0 | 19 |
+| 16. Agency Operations Dashboard | 9 | 0 | 9 |
+| 17. Calendar & Gantt Timeline View | 5 | 0 | 5 |
+| **Total** | **193** | **150** | **43** |
