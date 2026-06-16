@@ -60,6 +60,33 @@ public class Agency extends Auditable {
     @Column(name = "cover_image")
     private String coverImage;
 
+    @Column(name = "tagline", length = 200)
+    private String tagline;
+
+    @Column(name = "primary_color", length = 7)
+    private String primaryColor;
+
+    @Column(name = "secondary_color", length = 7)
+    private String secondaryColor;
+
+    @Column(name = "dark_primary_color", length = 7)
+    private String darkPrimaryColor;
+
+    @Column(name = "dark_secondary_color", length = 7)
+    private String darkSecondaryColor;
+
+    @Column(name = "meta_title", length = 70)
+    private String metaTitle;
+
+    @Column(name = "meta_description", length = 160)
+    private String metaDescription;
+
+    @Column(name = "meta_keywords", columnDefinition = "TEXT")
+    private String metaKeywords;
+
+    @Column(name = "og_image_url")
+    private String ogImageUrl;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     @Builder.Default

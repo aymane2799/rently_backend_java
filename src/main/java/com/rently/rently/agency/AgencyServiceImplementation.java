@@ -1,6 +1,8 @@
 package com.rently.rently.agency;
 
+import com.rently.rently.agency.dto.AgencyBrandingResponse;
 import com.rently.rently.agency.dto.AgencyResponse;
+import com.rently.rently.agency.dto.UpdateAgencyBrandingRequest;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -45,6 +47,28 @@ public class AgencyServiceImplementation implements AgencyService {
         }
         agency.setStatus(AgencyStatus.APPROVED);
         return agencyMapper.toResponse(agencyRepository.save(agency));
+    }
+
+    @Override
+    public AgencyBrandingResponse getBranding(String agencySlug) {
+        return agencyMapper.toBrandingResponse(agencyRepository.findBySlug(agencySlug)
+                .orElseThrow(() -> new EntityNotFoundException("Agency not found: " + agencySlug)));
+    }
+
+    @Override
+    public void updateBranding(String agencySlug, UpdateAgencyBrandingRequest request) {
+        Agency agency = agencyRepository.findBySlug(agencySlug)
+                .orElseThrow(() -> new EntityNotFoundException("Agency not found: " + agencySlug));
+        if (request.getTagline() != null) agency.setTagline(request.getTagline());
+        if (request.getPrimaryColor() != null) agency.setPrimaryColor(request.getPrimaryColor());
+        if (request.getSecondaryColor() != null) agency.setSecondaryColor(request.getSecondaryColor());
+        if (request.getDarkPrimaryColor() != null) agency.setDarkPrimaryColor(request.getDarkPrimaryColor());
+        if (request.getDarkSecondaryColor() != null) agency.setDarkSecondaryColor(request.getDarkSecondaryColor());
+        if (request.getMetaTitle() != null) agency.setMetaTitle(request.getMetaTitle());
+        if (request.getMetaDescription() != null) agency.setMetaDescription(request.getMetaDescription());
+        if (request.getMetaKeywords() != null) agency.setMetaKeywords(request.getMetaKeywords());
+        if (request.getOgImageUrl() != null) agency.setOgImageUrl(request.getOgImageUrl());
+        agencyRepository.save(agency);
     }
 
     private Agency findById(String id) {

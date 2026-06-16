@@ -22,4 +22,11 @@ public interface ReservationRepository extends JpaRepository<Reservation, String
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
     );
+
+    @Query("SELECT DISTINCT r.vehicle.id FROM Reservation r WHERE r.status = :status AND r.startDate < :to AND r.endDate > :from")
+    List<String> findVehicleIdsWithOverlappingReservations(
+            @Param("status") ReservationStatus status,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to
+    );
 }

@@ -314,20 +314,20 @@ Adds a photo gallery to each vehicle with primary-image designation and display 
 
 Adds branding configuration to `Agency` and exposes the public-facing landing page endpoints.
 
-- [ ] *(update)* `Agency` entity — add `tagline`, `primaryColor`, `secondaryColor`, `darkPrimaryColor`, `darkSecondaryColor`, `metaTitle`, `metaDescription`, `metaKeywords`, `ogImageUrl`
-- [ ] Create `UpdateAgencyBrandingRequest` DTO — all nine branding fields, all optional
-- [ ] Create `AgencyBrandingController`
-  - [ ] `GET /api/v1/settings/agency/branding` — `AGENCY_OWNER`; returns current branding fields
-  - [ ] `PATCH /api/v1/settings/agency/branding` — `AGENCY_OWNER`; updates branding fields → `204 NO_CONTENT`
-- [ ] Add ZXing (`com.google.zxing`) dependency for QR code generation
-- [ ] Implement `QrCodeService.generatePng(url, sizePixels)` — generates QR code as `byte[]`
-- [ ] Create `PublicQrCodeController`
-  - [ ] `GET /api/v1/agencies/{slug}/qr-code` — any authenticated; returns `image/png` of the agency's landing page URL
-- [ ] Create `PublicAgencyController` (no auth — `permitAll`)
-  - [ ] `GET /api/v1/public/{slug}` — returns `AgencyPublicProfileResponse` (name, logo, tagline, branding colours, SEO metadata)
-  - [ ] `GET /api/v1/public/{slug}/vehicles` — returns available vehicles with optional query params: `from`, `to` (date range), `category`, `transmission`; enforces availability check when date params provided
-- [ ] Create `AgencyPublicProfileResponse` DTO — all public-facing agency fields including branding and SEO
-- [ ] Create `PublicVehicleResponse` DTO — model name, category, transmission, daily rate, seats, features, primary image URL
+- [x] *(update)* `Agency` entity — add `tagline`, `primaryColor`, `secondaryColor`, `darkPrimaryColor`, `darkSecondaryColor`, `metaTitle`, `metaDescription`, `metaKeywords`, `ogImageUrl`
+- [x] Create `UpdateAgencyBrandingRequest` DTO — all nine branding fields, all optional
+- [x] Create `AgencyBrandingController`
+  - [x] `GET /api/v1/settings/agency/branding` — `AGENCY_OWNER`; returns current branding fields
+  - [x] `PATCH /api/v1/settings/agency/branding` — `AGENCY_OWNER`; updates branding fields → `204 NO_CONTENT`
+- [x] Add ZXing (`com.google.zxing`) dependency for QR code generation
+- [x] Implement `QrCodeService.generatePng(url, sizePixels)` — generates QR code as `byte[]`
+- [x] Create `PublicQrCodeController`
+  - [x] `GET /api/v1/agencies/{slug}/qr-code` — any authenticated; returns `image/png` of the agency's landing page URL
+- [x] Create `PublicAgencyController` (no auth — `permitAll`)
+  - [x] `GET /api/v1/public/{slug}` — returns `AgencyPublicProfileResponse` (name, logo, tagline, branding colours, SEO metadata)
+  - [x] `GET /api/v1/public/{slug}/vehicles` — returns available vehicles with optional query params: `from`, `to` (date range), `category`, `transmission`; enforces availability check when date params provided
+- [x] Create `AgencyPublicProfileResponse` DTO — all public-facing agency fields including branding and SEO
+- [x] Create `PublicVehicleResponse` DTO — model name, category, transmission, daily rate, seats, features, primary image URL
 
 ---
 
@@ -419,8 +419,8 @@ Unified event API consumed by both the date-grid calendar and the per-vehicle Ga
 | 11. Document Generation | 9 | 9 | 0 |
 | 12. Plan Quota Enforcement | 6 | 6 | 0 |
 | 13. Vehicle Image Gallery | 8 | 8 | 0 |
-| 14. Agency Branding & Public Landing Page | 10 | 0 | 10 |
+| 14. Agency Branding & Public Landing Page | 10 | 10 | 0 |
 | 15. Client Accounts & Booking Requests | 19 | 0 | 19 |
 | 16. Agency Operations Dashboard | 9 | 0 | 9 |
 | 17. Calendar & Gantt Timeline View | 5 | 0 | 5 |
-| **Total** | **193** | **150** | **43** |
+| **Total** | **193** | **160** | **33** |
