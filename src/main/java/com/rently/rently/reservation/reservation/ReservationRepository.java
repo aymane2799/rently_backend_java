@@ -67,4 +67,19 @@ public interface ReservationRepository extends JpaRepository<Reservation, String
             @Param("from") LocalDateTime from,
             @Param("to") LocalDateTime to
     );
+
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.vehicle JOIN FETCH r.customer WHERE r.status IN :statuses AND r.startDate < :to AND r.endDate > :from")
+    List<Reservation> findForCalendar(
+            @Param("statuses") Collection<ReservationStatus> statuses,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to
+    );
+
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.vehicle JOIN FETCH r.customer WHERE r.status IN :statuses AND r.startDate < :to AND r.endDate > :from AND r.pickupHub.branch.id = :branchId")
+    List<Reservation> findForCalendarByBranch(
+            @Param("statuses") Collection<ReservationStatus> statuses,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to,
+            @Param("branchId") String branchId
+    );
 }

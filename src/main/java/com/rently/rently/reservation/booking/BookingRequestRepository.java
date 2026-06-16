@@ -22,4 +22,17 @@ public interface BookingRequestRepository extends JpaRepository<BookingRequest, 
     List<BookingRequest> findByClientId(@Param("clientId") String clientId);
 
     List<BookingRequest> findAllByStatus(BookingRequestStatus status);
+
+    @Query("SELECT br FROM BookingRequest br JOIN FETCH br.vehicle JOIN FETCH br.clientAccount WHERE br.status = 'PENDING_CONFIRMATION' AND br.startDate < :to AND br.endDate > :from")
+    List<BookingRequest> findPendingForCalendar(
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to
+    );
+
+    @Query("SELECT br FROM BookingRequest br JOIN FETCH br.vehicle JOIN FETCH br.clientAccount WHERE br.status = 'PENDING_CONFIRMATION' AND br.startDate < :to AND br.endDate > :from AND br.pickupHub.branch.id = :branchId")
+    List<BookingRequest> findPendingForCalendarByBranch(
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to,
+            @Param("branchId") String branchId
+    );
 }

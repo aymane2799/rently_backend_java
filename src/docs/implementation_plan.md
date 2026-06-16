@@ -392,13 +392,13 @@ All metrics computed at query time — no new persisted entity.
 
 Unified event API consumed by both the date-grid calendar and the per-vehicle Gantt timeline on the frontend.
 
-- [ ] Create `CalendarEventType` enum (`RESERVATION`, `BOOKING_REQUEST`, `INSURANCE_EXPIRY`)
-- [ ] Create `CalendarEventResponse` DTO — `type`, `id`, `vehicleId`, `vehiclePlate`, `startDate`, `endDate`, `title`, `metadata` (map for type-specific fields: customerName, status, daysRemaining, etc.)
-- [ ] Create `CalendarService`
-  - [ ] `getEvents(from, to, branchId?)` — queries `Reservation` (ACTIVE/CLOSED), `BookingRequest` (PENDING_CONFIRMATION), and `Vehicle.insuranceExpiresAt`; maps each to a typed `CalendarEventResponse`
-  - [ ] Validates that `from ≤ to` and range ≤ 366 days; throws `400` otherwise
-- [ ] Create `CalendarController`
-  - [ ] `GET /api/v1/calendar/events?from={date}&to={date}` — `AGENCY_OWNER` / `BRANCH_MANAGER` / `AGENT`; branch-scoped for non-owner roles; returns `List<CalendarEventResponse>`
+- [x] Create `CalendarEventType` enum (`RESERVATION`, `BOOKING_REQUEST`, `INSURANCE_EXPIRY`)
+- [x] Create `CalendarEventResponse` DTO — `type`, `id`, `vehicleId`, `vehiclePlate`, `startDate`, `endDate`, `title`, `metadata` (map for type-specific fields: customerName, status, daysRemaining, etc.)
+- [x] Create `CalendarService`
+  - [x] `getEvents(from, to, branchId?)` — queries `Reservation` (ACTIVE/CLOSED), `BookingRequest` (PENDING_CONFIRMATION), and `Vehicle.insuranceExpiresAt`; maps each to a typed `CalendarEventResponse`
+  - [x] Validates that `from ≤ to` and range ≤ 366 days; throws `400` otherwise
+- [x] Create `CalendarController`
+  - [x] `GET /api/v1/calendar/events?from={date}&to={date}` — `AGENCY_OWNER` / `BRANCH_MANAGER` / `AGENT`; branch-scoped for non-owner roles; returns `List<CalendarEventResponse>`
 
 ---
 
@@ -422,5 +422,5 @@ Unified event API consumed by both the date-grid calendar and the per-vehicle Ga
 | 14. Agency Branding & Public Landing Page | 10 | 10 | 0 |
 | 15. Client Accounts & Booking Requests | 19 | 19 | 0 |
 | 16. Agency Operations Dashboard | 9 | 9 | 0 |
-| 17. Calendar & Gantt Timeline View | 5 | 0 | 5 |
-| **Total** | **193** | **188** | **5** |
+| 17. Calendar & Gantt Timeline View | 5 | 5 | 0 |
+| **Total** | **193** | **193** | **0** |
