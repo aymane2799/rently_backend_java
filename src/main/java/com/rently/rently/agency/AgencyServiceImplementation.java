@@ -3,8 +3,12 @@ package com.rently.rently.agency;
 import com.rently.rently.agency.dto.AgencyBrandingResponse;
 import com.rently.rently.agency.dto.AgencyResponse;
 import com.rently.rently.agency.dto.UpdateAgencyBrandingRequest;
+import com.rently.rently.shared.PagedResponse;
+import com.rently.rently.shared.PagedResponseMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,6 +31,12 @@ public class AgencyServiceImplementation implements AgencyService {
                 ? agencyRepository.findAllByStatus(status)
                 : agencyRepository.findAll();
         return agencies.stream().map(agencyMapper::toResponse).toList();
+    }
+
+    @Override
+    public PagedResponse<AgencyResponse> getAll(AgencyStatus status, String city, String planId, String search, Pageable pageable) {
+        Specification<Agency> spec = AgencySpecification.withFilters(status, city, planId, search);
+        return PagedResponseMapper.toPagedResponse(agencyRepository.findAll(spec, pageable), agencyMapper::toResponse);
     }
 
     @Override

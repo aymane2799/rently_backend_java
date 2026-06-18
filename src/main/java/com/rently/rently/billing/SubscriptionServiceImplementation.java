@@ -2,12 +2,17 @@ package com.rently.rently.billing;
 
 import com.rently.rently.billing.dto.CreateSubscriptionRequest;
 import com.rently.rently.billing.dto.SubscriptionResponse;
+import com.rently.rently.shared.PagedResponse;
+import com.rently.rently.shared.PagedResponseMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -57,6 +62,12 @@ public class SubscriptionServiceImplementation implements SubscriptionService {
     @Override
     public List<SubscriptionResponse> getAll() {
         return subscriptionRepository.findAll().stream().map(mapper::toResponse).toList();
+    }
+
+    @Override
+    public PagedResponse<SubscriptionResponse> getAll(SubscriptionStatus status, String agencySlug, String planId, LocalDate startDateFrom, LocalDate startDateTo, Pageable pageable) {
+        Specification<Subscription> spec = SubscriptionSpecification.withFilters(status, agencySlug, planId, startDateFrom, startDateTo);
+        return PagedResponseMapper.toPagedResponse(subscriptionRepository.findAll(spec, pageable), mapper::toResponse);
     }
 
     @Override

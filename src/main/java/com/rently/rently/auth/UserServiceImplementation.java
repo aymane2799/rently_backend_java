@@ -3,11 +3,15 @@ package com.rently.rently.auth;
 import com.rently.rently.auth.dto.RegisterUserRequest;
 import com.rently.rently.auth.dto.UpdateUserRequest;
 import com.rently.rently.auth.dto.UserResponse;
+import com.rently.rently.shared.PagedResponse;
+import com.rently.rently.shared.PagedResponseMapper;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
@@ -25,6 +29,12 @@ public class UserServiceImplementation implements UserService {
                 .stream()
                 .map(userMapper::toResponse)
                 .toList();
+    }
+
+    @Override
+    public PagedResponse<UserResponse> getAll(String agencySlug, UserRole role, String branchId, Boolean active, String search, Pageable pageable) {
+        Specification<User> spec = UserSpecification.withFilters(agencySlug, role, branchId, active, search);
+        return PagedResponseMapper.toPagedResponse(repository.findAll(spec, pageable), userMapper::toResponse);
     }
 
     @Override

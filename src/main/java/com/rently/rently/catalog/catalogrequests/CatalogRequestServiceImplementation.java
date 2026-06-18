@@ -6,8 +6,12 @@ import com.rently.rently.catalog.features.Feature;
 import com.rently.rently.catalog.features.FeatureRepository;
 import com.rently.rently.catalog.models.Model;
 import com.rently.rently.catalog.models.ModelRepository;
+import com.rently.rently.shared.PagedResponse;
+import com.rently.rently.shared.PagedResponseMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -99,6 +103,12 @@ public class CatalogRequestServiceImplementation implements CatalogRequestServic
             results = repository.findAll();
         }
         return results.stream().map(this::toResponse).toList();
+    }
+
+    @Override
+    public PagedResponse<CatalogRequestResponse> getAll(CatalogRequestType type, CatalogRequestStatus status, String agencySlug, Pageable pageable) {
+        Specification<CatalogRequest> spec = CatalogRequestSpecification.withFilters(type, status, agencySlug);
+        return PagedResponseMapper.toPagedResponse(repository.findAll(spec, pageable), this::toResponse);
     }
 
     private void validateTypeSpecificFields(SubmitCatalogRequestRequest request) {

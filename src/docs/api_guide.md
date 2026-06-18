@@ -11,6 +11,7 @@
 
 1. [Authentication & Headers](#1-authentication--headers)
 2. [Error Handling](#2-error-handling)
+- [Pagination, Filtering & Options](#pagination-filtering--options)
 3. [Enums Reference](#3-enums-reference)
 4. [Auth Module](#4-auth-module)
 5. [Agency Registration & Management](#5-agency-registration--management)
@@ -119,6 +120,85 @@ All errors return a unified **ErrorResponse** body:
   "timestamp": "2025-06-15T12:00:00Z"
 }
 ```
+
+---
+
+---
+
+## Pagination, Filtering & Options
+
+### Standard Pagination Parameters
+
+All list endpoints accept these query parameters:
+
+| Parameter | Type | Default | Constraint | Description |
+|---|---|---|---|---|
+| `page` | `integer` | `0` | ≥ 0 | 0-indexed page number |
+| `size` | `integer` | `20` | 1–100 | Items per page |
+| `sort` | `string` | `createdAt,desc` | — | `fieldName,direction` e.g. `sort=name,asc`. Repeatable: `sort=status,asc&sort=createdAt,desc` |
+
+### Paginated Response Format (`PagedResponse<T>`)
+
+Every list endpoint returns this envelope:
+
+```json
+{
+  "content": [...],
+  "page": 0,
+  "size": 20,
+  "totalElements": 84,
+  "totalPages": 5,
+  "first": true,
+  "last": false
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `content` | `array` | Items for this page |
+| `page` | `integer` | Current page (0-indexed) |
+| `size` | `integer` | Items per page as requested |
+| `totalElements` | `long` | Total matching records across all pages |
+| `totalPages` | `integer` | Total number of pages |
+| `first` | `boolean` | Whether this is the first page |
+| `last` | `boolean` | Whether this is the last page |
+
+### Options Endpoints (Dropdown / Select Inputs)
+
+Separate lightweight endpoints return minimal DTOs without pagination. Always return only active records. Use these for form selects — **not** the paginated list endpoints.
+
+| Endpoint | Required params | Optional params | Returns | Min search |
+|---|---|---|---|---|
+| `GET /brands/options` | — | — | `List<BrandOptionResponse>` | — |
+| `GET /models/options` | — | `brandId` | `List<ModelOptionResponse>` | — |
+| `GET /features/options` | — | — | `List<FeatureOptionResponse>` | — |
+| `GET /branches/options` | — | — | `List<BranchOptionResponse>` | — |
+| `GET /hubs/options` | `branchId` | — | `List<HubOptionResponse>` | — |
+| `GET /customers/options` | `search` | — | `List<CustomerOptionResponse>` | **2 chars** |
+
+Option response shapes:
+
+```json
+// BrandOptionResponse
+{ "id": "uuid", "name": "Renault" }
+
+// ModelOptionResponse
+{ "id": "uuid", "name": "Clio", "category": "ECONOMY" }
+
+// FeatureOptionResponse
+{ "id": "uuid", "name": "Air Conditioning", "icon": "snowflake" }
+
+// BranchOptionResponse
+{ "id": "uuid", "name": "Agence Maarif", "city": "Casablanca" }
+
+// HubOptionResponse
+{ "id": "uuid", "name": "CMN Terminal 1", "type": "AIRPORT" }
+
+// CustomerOptionResponse
+{ "id": "uuid", "firstName": "Karim", "lastName": "Fassi", "idNumber": "AB123456", "idType": "CIN" }
+```
+
+> `GET /customers/options` returns `400 Bad Request` if `search` is absent or fewer than 2 characters.
 
 ---
 
@@ -268,12 +348,19 @@ POST /agencies/register
 ### List Registrations (SUPER_ADMIN)
 
 ```
-GET /admin/agencies/registrations?status=PENDING
+GET /admin/agencies/registrations
 ```
 
-Query param `status` (optional): `PENDING` · `APPROVED` · `REJECTED`
+| Query Param | Type | Required | Description |
+|---|---|---|---|
+| `page` | `integer` | No | Default `0` |
+| `size` | `integer` | No | Default `20`, max `100` |
+| `sort` | `string` | No | Sortable: `agencyName` · `city` · `submittedAt` · `reviewedAt` |
+| `status` | `AgencyRegistrationStatus` | No | `PENDING` · `APPROVED` · `REJECTED` |
+| `city` | `string` | No | Exact match |
+| `search` | `string` | No | Case-insensitive on agency name or owner email |
 
-**Response `200 OK`:** `Array<AgencyRegistrationResponse>`
+**Response `200 OK`:** `PagedResponse<AgencyRegistrationResponse>`
 
 ---
 
@@ -321,12 +408,20 @@ POST /admin/agencies/registrations/{id}/reject
 ### List Agencies (SUPER_ADMIN)
 
 ```
-GET /admin/agencies?status=APPROVED
+GET /admin/agencies
 ```
 
-Query param `status` (optional): `APPROVED` · `BLOCKED`
+| Query Param | Type | Required | Description |
+|---|---|---|---|
+| `page` | `integer` | No | Default `0` |
+| `size` | `integer` | No | Default `20`, max `100` |
+| `sort` | `string` | No | Sortable: `name` · `city` · `approvedAt` · `createdAt` |
+| `status` | `AgencyStatus` | No | `APPROVED` · `BLOCKED` |
+| `city` | `string` | No | Exact match |
+| `planId` | `string (UUID)` | No | Filter by subscription plan |
+| `search` | `string` | No | Case-insensitive on name, owner first/last name, or email |
 
-**Response `200 OK`:** `Array<AgencyResponse>`
+**Response `200 OK`:** `PagedResponse<AgencyResponse>`
 
 ---
 
@@ -577,7 +672,15 @@ GET /agencies/{slug}/qr-code
 GET /plans
 ```
 
-**Response `200 OK`:** `Array<SubscriptionPlanResponse>`
+| Query Param | Type | Required | Description |
+|---|---|---|---|
+| `page` | `integer` | No | Default `0` |
+| `size` | `integer` | No | Default `20`, max `100` |
+| `sort` | `string` | No | Sortable: `code` · `priceMonthly` · `createdAt` |
+
+Returns only active plans.
+
+**Response `200 OK`:** `PagedResponse<SubscriptionPlanResponse>`
 
 ---
 
@@ -587,7 +690,14 @@ GET /plans
 GET /admin/plans
 ```
 
-**Response `200 OK`:** `Array<SubscriptionPlanResponse>`
+| Query Param | Type | Required | Description |
+|---|---|---|---|
+| `page` | `integer` | No | Default `0` |
+| `size` | `integer` | No | Default `20`, max `100` |
+| `sort` | `string` | No | Sortable: `code` · `priceMonthly` · `createdAt` |
+| `active` | `boolean` | No | Filter by active status |
+
+**Response `200 OK`:** `PagedResponse<SubscriptionPlanResponse>`
 
 ---
 
@@ -706,7 +816,18 @@ POST /admin/subscriptions
 GET /admin/subscriptions
 ```
 
-**Response `200 OK`:** `Array<SubscriptionResponse>`
+| Query Param | Type | Required | Description |
+|---|---|---|---|
+| `page` | `integer` | No | Default `0` |
+| `size` | `integer` | No | Default `20`, max `100` |
+| `sort` | `string` | No | Sortable: `startDate` · `endDate` · `amountDue` · `createdAt` |
+| `status` | `SubscriptionStatus` | No | `PENDING_PAYMENT` · `ACTIVE` · `EXPIRED` · `SUSPENDED` |
+| `agencySlug` | `string` | No | Exact match |
+| `planId` | `string (UUID)` | No | Filter by plan |
+| `startDateFrom` | `date` | No | ISO 8601 — subscription start on or after this date |
+| `startDateTo` | `date` | No | ISO 8601 — subscription start on or before this date |
+
+**Response `200 OK`:** `PagedResponse<SubscriptionResponse>`
 
 ---
 
@@ -777,7 +898,34 @@ Headers: X-Tenant-ID: casablanca-cars
 GET /brands
 ```
 
-**Response `200 OK`:** `Array<BrandResponse>`
+| Query Param | Type | Required | Description |
+|---|---|---|---|
+| `page` | `integer` | No | Default `0` |
+| `size` | `integer` | No | Default `20`, max `100` |
+| `sort` | `string` | No | Sortable: `name` · `createdAt` |
+| `active` | `boolean` | No | Default `true` |
+| `search` | `string` | No | Case-insensitive search on name |
+
+**Response `200 OK`:** `PagedResponse<BrandResponse>`
+
+---
+
+### List Brands — Options (Public)
+
+```
+GET /brands/options
+```
+
+No pagination. Returns all active brands.
+
+**Response `200 OK`:** `Array<BrandOptionResponse>`
+
+```json
+[
+  { "id": "uuid", "name": "Renault" },
+  { "id": "uuid", "name": "Toyota" }
+]
+```
 
 ---
 
@@ -862,7 +1010,40 @@ No request body. **Response `204 No Content`**
 GET /models
 ```
 
-**Response `200 OK`:** `Array<ModelResponse>`
+| Query Param | Type | Required | Description |
+|---|---|---|---|
+| `page` | `integer` | No | Default `0` |
+| `size` | `integer` | No | Default `20`, max `100` |
+| `sort` | `string` | No | Sortable: `name` · `category` · `createdAt` |
+| `active` | `boolean` | No | Default `true` |
+| `brandId` | `string (UUID)` | No | Filter by brand |
+| `category` | `VehicleCategory` | No | Filter by vehicle category |
+| `search` | `string` | No | Case-insensitive search on name |
+
+**Response `200 OK`:** `PagedResponse<ModelResponse>`
+
+---
+
+### List Models — Options (Public)
+
+```
+GET /models/options?brandId={uuid}
+```
+
+| Query Param | Type | Required | Description |
+|---|---|---|---|
+| `brandId` | `string (UUID)` | No | Restrict to models of a specific brand |
+
+No pagination. Returns all active models (optionally filtered by brand).
+
+**Response `200 OK`:** `Array<ModelOptionResponse>`
+
+```json
+[
+  { "id": "uuid", "name": "Clio", "category": "ECONOMY" },
+  { "id": "uuid", "name": "Megane", "category": "COMPACT" }
+]
+```
 
 ---
 
@@ -958,7 +1139,34 @@ No request body. **Response `204 No Content`**
 GET /features
 ```
 
-**Response `200 OK`:** `Array<FeatureResponse>`
+| Query Param | Type | Required | Description |
+|---|---|---|---|
+| `page` | `integer` | No | Default `0` |
+| `size` | `integer` | No | Default `20`, max `100` |
+| `sort` | `string` | No | Sortable: `name` · `createdAt` |
+| `active` | `boolean` | No | Default `true` |
+| `search` | `string` | No | Case-insensitive search on name |
+
+**Response `200 OK`:** `PagedResponse<FeatureResponse>`
+
+---
+
+### List Features — Options (Public)
+
+```
+GET /features/options
+```
+
+No pagination. Returns all active features.
+
+**Response `200 OK`:** `Array<FeatureOptionResponse>`
+
+```json
+[
+  { "id": "uuid", "name": "Air Conditioning", "icon": "snowflake" },
+  { "id": "uuid", "name": "Bluetooth", "icon": "bluetooth" }
+]
+```
 
 ---
 
@@ -1112,19 +1320,33 @@ GET /catalog-requests
 Headers: X-Tenant-ID: casablanca-cars
 ```
 
-**Response `200 OK`:** `Array<CatalogRequestResponse>`
+| Query Param | Type | Required | Description |
+|---|---|---|---|
+| `page` | `integer` | No | Default `0` |
+| `size` | `integer` | No | Default `20`, max `100` |
+| `sort` | `string` | No | Sortable: `submittedAt` · `type` · `status` |
+| `type` | `CatalogRequestType` | No | `BRAND` · `MODEL` · `FEATURE` |
+| `status` | `CatalogRequestStatus` | No | `PENDING` · `APPROVED` · `REJECTED` |
+
+**Response `200 OK`:** `PagedResponse<CatalogRequestResponse>`
 
 ---
 
 ### List All Catalog Requests (SUPER_ADMIN)
 
 ```
-GET /admin/catalog-requests?type=MODEL&status=PENDING
+GET /admin/catalog-requests
 ```
 
-Query params (optional): `type` (`CatalogRequestType`) · `status` (`CatalogRequestStatus`)
+| Query Param | Type | Required | Description |
+|---|---|---|---|
+| `page` | `integer` | No | Default `0` |
+| `size` | `integer` | No | Default `20`, max `100` |
+| `sort` | `string` | No | Sortable: `submittedAt` · `reviewedAt` · `type` · `status` |
+| `type` | `CatalogRequestType` | No | `BRAND` · `MODEL` · `FEATURE` |
+| `status` | `CatalogRequestStatus` | No | `PENDING` · `APPROVED` · `REJECTED` |
 
-**Response `200 OK`:** `Array<CatalogRequestResponse>`
+**Response `200 OK`:** `PagedResponse<CatalogRequestResponse>`
 
 ---
 
@@ -1194,7 +1416,17 @@ GET /users
 Headers: X-Tenant-ID: casablanca-cars
 ```
 
-**Response `200 OK`:** `Array<UserResponse>`
+| Query Param | Type | Required | Description |
+|---|---|---|---|
+| `page` | `integer` | No | Default `0` |
+| `size` | `integer` | No | Default `20`, max `100` |
+| `sort` | `string` | No | Sortable: `firstName` · `lastName` · `role` · `createdAt` |
+| `role` | `UserRole` | No | `BRANCH_MANAGER` · `AGENT` |
+| `branchId` | `string (UUID)` | No | Filter by branch |
+| `active` | `boolean` | No | Filter by active status |
+| `search` | `string` | No | Case-insensitive on first name, last name, or email |
+
+**Response `200 OK`:** `PagedResponse<UserResponse>`
 
 ---
 
@@ -1296,7 +1528,36 @@ GET /branches
 Headers: X-Tenant-ID: casablanca-cars
 ```
 
-**Response `200 OK`:** `Array<BranchResponse>`
+| Query Param | Type | Required | Description |
+|---|---|---|---|
+| `page` | `integer` | No | Default `0` |
+| `size` | `integer` | No | Default `20`, max `100` |
+| `sort` | `string` | No | Sortable: `name` · `city` · `createdAt` |
+| `active` | `boolean` | No | Default `true` |
+| `city` | `string` | No | Exact match |
+| `search` | `string` | No | Case-insensitive search on name |
+
+**Response `200 OK`:** `PagedResponse<BranchResponse>`
+
+---
+
+### List Branches — Options
+
+```
+GET /branches/options
+Headers: X-Tenant-ID: casablanca-cars
+```
+
+No pagination. Returns all active branches.
+
+**Response `200 OK`:** `Array<BranchOptionResponse>`
+
+```json
+[
+  { "id": "uuid", "name": "Agence Maarif", "city": "Casablanca" },
+  { "id": "uuid", "name": "Agence Guéliz", "city": "Marrakech" }
+]
+```
 
 ---
 
@@ -1401,7 +1662,39 @@ GET /branches/{branchId}/hubs
 Headers: X-Tenant-ID: casablanca-cars
 ```
 
-**Response `200 OK`:** `Array<HubResponse>`
+| Query Param | Type | Required | Description |
+|---|---|---|---|
+| `page` | `integer` | No | Default `0` |
+| `size` | `integer` | No | Default `20`, max `100` |
+| `sort` | `string` | No | Sortable: `name` · `type` · `createdAt` |
+| `active` | `boolean` | No | Default `true` |
+| `type` | `HubType` | No | `AIRPORT` · `TRAIN_STATION` · `MAIN_OFFICE` · `PRIVATE_LOT` |
+
+**Response `200 OK`:** `PagedResponse<HubResponse>`
+
+---
+
+### List Hubs — Options
+
+```
+GET /hubs/options?branchId={uuid}
+Headers: X-Tenant-ID: casablanca-cars
+```
+
+| Query Param | Type | Required | Description |
+|---|---|---|---|
+| `branchId` | `string (UUID)` | **Yes** | Branch to list hubs for |
+
+No pagination. Returns all active hubs for the given branch.
+
+**Response `200 OK`:** `Array<HubOptionResponse>`
+
+```json
+[
+  { "id": "uuid", "name": "CMN Terminal 1", "type": "AIRPORT" },
+  { "id": "uuid", "name": "Main Office", "type": "MAIN_OFFICE" }
+]
+```
 
 ---
 
@@ -1507,7 +1800,18 @@ GET /vehicles
 Headers: X-Tenant-ID: casablanca-cars
 ```
 
-**Response `200 OK`:** `Array<VehicleResponse>`
+| Query Param | Type | Required | Description |
+|---|---|---|---|
+| `page` | `integer` | No | Default `0` |
+| `size` | `integer` | No | Default `20`, max `100` |
+| `sort` | `string` | No | Sortable: `licensePlate` · `status` · `mileage` · `dailyBaseRate` · `createdAt` |
+| `status` | `VehicleStatus` | No | `AVAILABLE` · `RENTED` · `MAINTENANCE` · `PENDING_RELOCATION` |
+| `transmission` | `Transmission` | No | `MANUAL` · `AUTOMATIC` |
+| `fuelType` | `FuelType` | No | `DIESEL` · `GASOLINE` · `ELECTRIC` · `HYBRID` |
+| `hubId` | `string (UUID)` | No | Filter by current hub |
+| `search` | `string` | No | Case-insensitive search on license plate |
+
+**Response `200 OK`:** `PagedResponse<VehicleResponse>`
 
 ---
 
@@ -1751,7 +2055,39 @@ GET /customers
 Headers: X-Tenant-ID: casablanca-cars
 ```
 
-**Response `200 OK`:** `Array<CustomerResponse>`
+| Query Param | Type | Required | Description |
+|---|---|---|---|
+| `page` | `integer` | No | Default `0` |
+| `size` | `integer` | No | Default `20`, max `100` |
+| `sort` | `string` | No | Sortable: `firstName` · `lastName` · `createdAt` |
+| `idType` | `IdType` | No | `CIN` · `PASSPORT` |
+| `search` | `string` | No | Case-insensitive on first name, last name, phone, email, or id number |
+
+**Response `200 OK`:** `PagedResponse<CustomerResponse>`
+
+---
+
+### List Customers — Options (Type-ahead)
+
+```
+GET /customers/options?search=ka
+Headers: X-Tenant-ID: casablanca-cars
+```
+
+| Query Param | Type | Required | Description |
+|---|---|---|---|
+| `search` | `string` | **Yes** | Min 2 characters. Searches first name, last name, and id number. |
+
+Returns `400 Bad Request` if `search` is absent or shorter than 2 characters.
+
+**Response `200 OK`:** `Array<CustomerOptionResponse>`
+
+```json
+[
+  { "id": "uuid", "firstName": "Karim", "lastName": "Fassi", "idNumber": "AB123456", "idType": "CIN" },
+  { "id": "uuid", "firstName": "Karima", "lastName": "Alaoui", "idNumber": "CD789012", "idType": "CIN" }
+]
+```
 
 ---
 
@@ -1911,7 +2247,19 @@ GET /reservations
 Headers: X-Tenant-ID: casablanca-cars
 ```
 
-**Response `200 OK`:** `Array<ReservationResponse>`
+| Query Param | Type | Required | Description |
+|---|---|---|---|
+| `page` | `integer` | No | Default `0` |
+| `size` | `integer` | No | Default `20`, max `100` |
+| `sort` | `string` | No | Sortable: `startDate` · `endDate` · `totalAmount` · `status` · `createdAt` |
+| `status` | `ReservationStatus` | No | `ACTIVE` · `CLOSED` · `CANCELLED` |
+| `contractStatus` | `ContractStatus` | No | `PENDING` · `PARTIAL_EXECUTION` · `FULLY_EXECUTED` |
+| `customerId` | `string (UUID)` | No | Filter by customer |
+| `vehicleId` | `string (UUID)` | No | Filter by vehicle |
+| `startDateFrom` | `date` | No | ISO 8601 — reservation starts on or after this date |
+| `startDateTo` | `date` | No | ISO 8601 — reservation starts on or before this date |
+
+**Response `200 OK`:** `PagedResponse<ReservationResponse>`
 
 ---
 
@@ -2217,13 +2565,19 @@ Authorization: Bearer <client_jwt>
 ### List Booking Requests — Staff (AGENT, BRANCH_MANAGER, AGENCY_OWNER)
 
 ```
-GET /booking-requests?status=PENDING_CONFIRMATION
+GET /booking-requests
 Headers: X-Tenant-ID: casablanca-cars
 ```
 
-Query param `status` (optional): `PENDING_CONFIRMATION` · `CONFIRMED` · `REJECTED`
+| Query Param | Type | Required | Description |
+|---|---|---|---|
+| `page` | `integer` | No | Default `0` |
+| `size` | `integer` | No | Default `20`, max `100` |
+| `sort` | `string` | No | Sortable: `createdAt` · `startDate` · `status` |
+| `status` | `BookingRequestStatus` | No | `PENDING_CONFIRMATION` · `CONFIRMED` · `REJECTED` |
+| `vehicleId` | `string (UUID)` | No | Filter by vehicle |
 
-**Response `200 OK`:** `Array<BookingRequestResponse>`
+**Response `200 OK`:** `PagedResponse<BookingRequestResponse>`
 
 ---
 

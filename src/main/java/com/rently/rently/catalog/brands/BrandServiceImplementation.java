@@ -1,8 +1,12 @@
 package com.rently.rently.catalog.brands;
 
+import com.rently.rently.shared.PagedResponse;
+import com.rently.rently.shared.PagedResponseMapper;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,6 +22,20 @@ public class BrandServiceImplementation implements BrandService {
         return repository.findAllByIsActive(true)
                 .stream()
                 .map(brandMapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    public PagedResponse<BrandResponse> getAll(String search, Boolean isActive, Pageable pageable) {
+        Specification<Brand> spec = BrandSpecification.withFilters(search, isActive);
+        return PagedResponseMapper.toPagedResponse(repository.findAll(spec, pageable), brandMapper::toResponse);
+    }
+
+    @Override
+    public List<BrandOptionResponse> getOptions() {
+        return repository.findAllByIsActive(true)
+                .stream()
+                .map(b -> new BrandOptionResponse(b.getId(), b.getName()))
                 .toList();
     }
 

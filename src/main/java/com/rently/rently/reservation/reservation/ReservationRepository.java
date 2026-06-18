@@ -1,6 +1,7 @@
 package com.rently.rently.reservation.reservation;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -11,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ReservationRepository extends JpaRepository<Reservation, String> {
+public interface ReservationRepository extends JpaRepository<Reservation, String>, JpaSpecificationExecutor<Reservation> {
 
     @Query("SELECT r FROM Reservation r JOIN FETCH r.customer JOIN FETCH r.vehicle JOIN FETCH r.pickupHub JOIN FETCH r.returnHub WHERE r.id = :id")
     Optional<Reservation> findByIdWithDetails(@Param("id") String id);

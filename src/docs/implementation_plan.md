@@ -402,6 +402,108 @@ Unified event API consumed by both the date-grid calendar and the per-vehicle Ga
 
 ---
 
+## 18. Pagination, Filtering & Sorting
+
+Adds paginated list endpoints with per-entity filters and sort controls to every `getAll` API. Introduces a shared `PagedResponse<T>` wrapper and per-entity `Specification` classes. Also adds lightweight `/options` endpoints for select/dropdown inputs that return minimal DTOs without pagination.
+
+### 18.1 Shared Infrastructure
+
+- [x] Create `PagedResponse<T>` generic record in `shared/` — fields: `content`, `page`, `size`, `totalElements`, `totalPages`, `first`, `last`
+- [x] Create `PagedResponseMapper` utility — converts Spring `Page<E>` to `PagedResponse<R>` by applying a mapping function to each element
+
+### 18.2 Public Catalog — Brands
+
+- [x] Add `JpaSpecificationExecutor<Brand>` to `BrandRepository`
+- [x] Create `BrandSpecification` — predicates: `isActive`, `search` (name `ILIKE`)
+- [x] *(update)* `BrandController.getAll` — accepts `page`, `size`, `sort`, `active`, `search`; returns `PagedResponse<BrandResponse>`
+- [x] Add `GET /brands/options` — no pagination; returns `List<BrandOptionResponse>` (`id`, `name`)
+
+### 18.3 Public Catalog — Models
+
+- [x] Add `JpaSpecificationExecutor<Model>` to `ModelRepository`
+- [x] Create `ModelSpecification` — predicates: `isActive`, `brandId`, `category`, `search`
+- [x] *(update)* `ModelController.getAll` — accepts `page`, `size`, `sort`, `active`, `brandId`, `category`, `search`; returns `PagedResponse<ModelResponse>`
+- [x] Add `GET /models/options` — accepts optional `brandId`; returns `List<ModelOptionResponse>` (`id`, `name`, `category`)
+
+### 18.4 Public Catalog — Features
+
+- [x] Add `JpaSpecificationExecutor<Feature>` to `FeatureRepository`
+- [x] Create `FeatureSpecification` — predicates: `isActive`, `search`
+- [x] *(update)* `FeatureController.getAll` — accepts `page`, `size`, `sort`, `active`, `search`; returns `PagedResponse<FeatureResponse>`
+- [x] Add `GET /features/options` — no pagination; returns `List<FeatureOptionResponse>` (`id`, `name`, `icon`)
+
+### 18.5 Admin — Agencies
+
+- [x] Add `JpaSpecificationExecutor<Agency>` to `AgencyRepository`
+- [x] Create `AgencySpecification` — predicates: `status`, `city`, `planId`, `search` (name, owner name, email)
+- [x] *(update)* `AdminAgencyController.getAll` — accepts `page`, `size`, `sort`, `status`, `city`, `planId`, `search`; returns `PagedResponse<AgencyResponse>`
+
+### 18.6 Admin — Agency Registrations
+
+- [x] Add `JpaSpecificationExecutor<AgencyRegistration>` to `AgencyRegistrationRepository`
+- [x] Create `AgencyRegistrationSpecification` — predicates: `status`, `city`, `search` (agency name, owner email)
+- [x] *(update)* `AdminRegistrationController.getAll` — accepts `page`, `size`, `sort`, `status`, `city`, `search`; returns `PagedResponse<AgencyRegistrationResponse>`
+
+### 18.7 Admin — Subscriptions
+
+- [x] Add `JpaSpecificationExecutor<Subscription>` to `SubscriptionRepository`
+- [x] Create `SubscriptionSpecification` — predicates: `status`, `agencySlug`, `planId`, `startDateFrom`, `startDateTo`
+- [x] *(update)* `AdminSubscriptionController.getAll` — accepts `page`, `size`, `sort`, `status`, `agencySlug`, `planId`, `startDateFrom`, `startDateTo`; returns `PagedResponse<SubscriptionResponse>`
+
+### 18.8 Admin — Catalog Requests
+
+- [x] Add `JpaSpecificationExecutor<CatalogRequest>` to `CatalogRequestRepository`
+- [x] Create `CatalogRequestSpecification` — predicates: `type`, `status`, `agencySlug`
+- [x] *(update)* `AdminCatalogRequestController.getAll` — accepts `page`, `size`, `sort`, `type`, `status`; returns `PagedResponse<CatalogRequestResponse>`
+- [x] *(update)* `CatalogRequestController.getForAgency` — accepts `page`, `size`, `sort`, `type`, `status`; returns `PagedResponse<CatalogRequestResponse>`
+
+### 18.9 Auth — Users
+
+- [x] Add `JpaSpecificationExecutor<User>` to `UserRepository`
+- [x] Create `UserSpecification` — predicates: `role`, `branchId`, `active`, `search` (first/last name, email)
+- [x] *(update)* `UserController.getAll` — accepts `page`, `size`, `sort`, `role`, `branchId`, `active`, `search`; returns `PagedResponse<UserResponse>`
+
+### 18.10 Location — Branches
+
+- [x] Add `JpaSpecificationExecutor<Branch>` to `BranchRepository`
+- [x] Create `BranchSpecification` — predicates: `active`, `city`, `search` (name)
+- [x] *(update)* `BranchController.getAll` — accepts `page`, `size`, `sort`, `active`, `city`, `search`; returns `PagedResponse<BranchResponse>`
+- [x] Add `GET /branches/options` — no pagination; returns `List<BranchOptionResponse>` (`id`, `name`, `city`)
+
+### 18.11 Location — Hubs
+
+- [x] Add `JpaSpecificationExecutor<Hub>` to `HubRepository`
+- [x] Create `HubSpecification` — predicates: `active`, `type`
+- [x] *(update)* `HubController.getAllByBranch` — accepts `page`, `size`, `sort`, `active`, `type`; returns `PagedResponse<HubResponse>`
+- [x] Add `GET /hubs/options` — requires `branchId`; returns `List<HubOptionResponse>` (`id`, `name`, `type`)
+
+### 18.12 Fleet — Vehicles
+
+- [x] Add `JpaSpecificationExecutor<Vehicle>` to `VehicleRepository`
+- [x] Create `VehicleSpecification` — predicates: `status`, `transmission`, `fuelType`, `currentHubId`, `search` (license plate)
+- [x] *(update)* `VehicleController.getAll` — accepts `page`, `size`, `sort`, `status`, `transmission`, `fuelType`, `hubId`, `search`; returns `PagedResponse<VehicleResponse>`
+
+### 18.13 Reservations — Customers
+
+- [x] Add `JpaSpecificationExecutor<Customer>` to `CustomerRepository`
+- [x] Create `CustomerSpecification` — predicates: `idType`, `search` (first/last name, phone, email, id number)
+- [x] *(update)* `CustomerController.getAll` — accepts `page`, `size`, `sort`, `idType`, `search`; returns `PagedResponse<CustomerResponse>`
+- [x] Add `GET /customers/options` — requires `search` ≥ 2 chars; returns `List<CustomerOptionResponse>` (`id`, `firstName`, `lastName`, `idNumber`, `idType`)
+
+### 18.14 Reservations
+
+- [x] Add `JpaSpecificationExecutor<Reservation>` to `ReservationRepository`
+- [x] Create `ReservationSpecification` — predicates: `status`, `contractStatus`, `customerId`, `vehicleId`, `startDateFrom`, `startDateTo`, `createdBy`
+- [x] *(update)* `ReservationController.getAll` — accepts `page`, `size`, `sort`, `status`, `contractStatus`, `customerId`, `vehicleId`, `startDateFrom`, `startDateTo`; returns `PagedResponse<ReservationResponse>`
+
+### 18.15 Booking Requests
+
+- [x] Add `JpaSpecificationExecutor<BookingRequest>` to `BookingRequestRepository`
+- [x] Create `BookingRequestSpecification` — predicates: `status`, `vehicleId`
+- [x] *(update)* `BookingRequestController.getAll` — accepts `page`, `size`, `sort`, `status`, `vehicleId`; returns `PagedResponse<BookingRequestResponse>`
+
+---
+
 ## Progress Summary
 
 | Section | Total | Done | Remaining |
@@ -423,4 +525,5 @@ Unified event API consumed by both the date-grid calendar and the per-vehicle Ga
 | 15. Client Accounts & Booking Requests | 19 | 19 | 0 |
 | 16. Agency Operations Dashboard | 9 | 9 | 0 |
 | 17. Calendar & Gantt Timeline View | 5 | 5 | 0 |
-| **Total** | **193** | **193** | **0** |
+| 18. Pagination, Filtering & Sorting | 51 | 51 | 0 |
+| **Total** | **244** | **244** | **0** |

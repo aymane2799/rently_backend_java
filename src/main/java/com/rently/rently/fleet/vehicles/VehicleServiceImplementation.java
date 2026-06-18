@@ -4,9 +4,13 @@ import com.rently.rently.billing.QuotaService;
 import com.rently.rently.catalog.PublicCatalogService;
 import com.rently.rently.fleet.vehicles.hydration.VehicleHydrationContext;
 import com.rently.rently.fleet.vehicles.hydration.VehicleHydrator;
+import com.rently.rently.shared.PagedResponse;
+import com.rently.rently.shared.PagedResponseMapper;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -25,6 +29,12 @@ public class VehicleServiceImplementation implements VehicleService {
     @Override
     public List<VehicleResponse> getAll() {
         return repository.findAll().stream().map(this::toResponseWithImages).toList();
+    }
+
+    @Override
+    public PagedResponse<VehicleResponse> getAll(VehicleStatus status, Transmission transmission, FuelType fuelType, String currentHubId, String search, Pageable pageable) {
+        Specification<Vehicle> spec = VehicleSpecification.withFilters(status, transmission, fuelType, currentHubId, search);
+        return PagedResponseMapper.toPagedResponse(repository.findAll(spec, pageable), this::toResponseWithImages);
     }
 
     @Override

@@ -3,12 +3,14 @@ package com.rently.rently.agency;
 import com.rently.rently.agency.dto.AgencyRegistrationResponse;
 import com.rently.rently.agency.dto.RejectRegistrationRequest;
 import com.rently.rently.auth.User;
+import com.rently.rently.shared.PagedResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/admin/agencies/registrations")
@@ -18,9 +20,13 @@ public class AdminRegistrationController {
     private final AgencyRegistrationService service;
 
     @GetMapping
-    public List<AgencyRegistrationResponse> getAll(
-            @RequestParam(required = false) AgencyRegistrationStatus status) {
-        return service.getAll(status);
+    public PagedResponse<AgencyRegistrationResponse> getAll(
+            @RequestParam(required = false) AgencyRegistrationStatus status,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String search,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        return service.getAll(status, city, search, pageable);
     }
 
     @GetMapping("/{id}")

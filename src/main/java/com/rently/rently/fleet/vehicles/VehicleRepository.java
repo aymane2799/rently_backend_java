@@ -1,6 +1,7 @@
 package com.rently.rently.fleet.vehicles;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -9,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface VehicleRepository extends JpaRepository<Vehicle, String> {
+public interface VehicleRepository extends JpaRepository<Vehicle, String>, JpaSpecificationExecutor<Vehicle> {
     Optional<Vehicle> findByLicensePlate(String licensePlate);
     Optional<Vehicle> findByInsuranceNumber(String insuranceNumber);
     List<Vehicle> findByStatus(VehicleStatus status);

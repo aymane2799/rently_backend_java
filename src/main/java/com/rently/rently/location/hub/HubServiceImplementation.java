@@ -5,8 +5,12 @@ import com.rently.rently.location.branch.Branch;
 import com.rently.rently.location.branch.BranchRepository;
 import com.rently.rently.location.hub.hydration.HubHydrationContext;
 import com.rently.rently.location.hub.hydration.HubHydrator;
+import com.rently.rently.shared.PagedResponse;
+import com.rently.rently.shared.PagedResponseMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,6 +31,20 @@ public class HubServiceImplementation implements HubService {
                 .orElseThrow(() -> new EntityNotFoundException("Branch with id " + branchId + " not found!"));
         return repository.findAllByBranchAndIsActive(branch, true).stream()
                 .map(mapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    public PagedResponse<HubResponse> getAllByBranch(String branchId, Boolean active, HubType type, Pageable pageable) {
+        Specification<Hub> spec = HubSpecification.withFilters(branchId, active, type);
+        return PagedResponseMapper.toPagedResponse(repository.findAll(spec, pageable), mapper::toResponse);
+    }
+
+    @Override
+    public List<HubOptionResponse> getOptions(String branchId) {
+        Specification<Hub> spec = HubSpecification.withFilters(branchId, true, null);
+        return repository.findAll(spec).stream()
+                .map(h -> new HubOptionResponse(h.getId(), h.getName(), h.getType(), h.getBranch().getId()))
                 .toList();
     }
 

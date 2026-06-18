@@ -1,10 +1,15 @@
 package com.rently.rently.catalog.models;
 
+import com.rently.rently.catalog.VehicleCategory;
 import com.rently.rently.catalog.models.hydration.ModelHydrationContext;
 import com.rently.rently.catalog.models.hydration.ModelHydrator;
+import com.rently.rently.shared.PagedResponse;
+import com.rently.rently.shared.PagedResponseMapper;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,6 +26,21 @@ public class ModelServiceImplementation implements ModelService {
         return repository.findAllByIsActive(true)
                 .stream()
                 .map(modelMapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    public PagedResponse<ModelResponse> getAll(String search, String brandId, VehicleCategory category, Boolean isActive, Pageable pageable) {
+        Specification<Model> spec = ModelSpecification.withFilters(search, brandId, category, isActive);
+        return PagedResponseMapper.toPagedResponse(repository.findAll(spec, pageable), modelMapper::toResponse);
+    }
+
+    @Override
+    public List<ModelOptionResponse> getOptions(String brandId) {
+        Specification<Model> spec = ModelSpecification.withFilters(null, brandId, null, true);
+        return repository.findAll(spec)
+                .stream()
+                .map(m -> new ModelOptionResponse(m.getId(), m.getName(), m.getBrand().getId(), m.getBrand().getName(), m.getCategory()))
                 .toList();
     }
 

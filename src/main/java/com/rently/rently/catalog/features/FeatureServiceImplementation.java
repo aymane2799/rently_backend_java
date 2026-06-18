@@ -1,8 +1,12 @@
 package com.rently.rently.catalog.features;
 
+import com.rently.rently.shared.PagedResponse;
+import com.rently.rently.shared.PagedResponseMapper;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,6 +22,20 @@ public class FeatureServiceImplementation implements FeatureService {
         return repository.findAllByIsActive(true)
                 .stream()
                 .map(featureMapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    public PagedResponse<FeatureResponse> getAll(String search, Boolean isActive, Pageable pageable) {
+        Specification<Feature> spec = FeatureSpecification.withFilters(search, isActive);
+        return PagedResponseMapper.toPagedResponse(repository.findAll(spec, pageable), featureMapper::toResponse);
+    }
+
+    @Override
+    public List<FeatureOptionResponse> getOptions() {
+        return repository.findAllByIsActive(true)
+                .stream()
+                .map(f -> new FeatureOptionResponse(f.getId(), f.getName(), f.getIcon()))
                 .toList();
     }
 

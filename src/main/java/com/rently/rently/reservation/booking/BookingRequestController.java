@@ -3,14 +3,16 @@ package com.rently.rently.reservation.booking;
 import com.rently.rently.auth.User;
 import com.rently.rently.reservation.booking.dto.BookingRequestResponse;
 import com.rently.rently.reservation.booking.dto.RejectBookingRequestRequest;
+import com.rently.rently.shared.PagedResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/booking-requests")
@@ -21,9 +23,12 @@ public class BookingRequestController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('AGENT', 'BRANCH_MANAGER', 'AGENCY_OWNER')")
-    public List<BookingRequestResponse> getAll(
-            @RequestParam(required = false) BookingRequestStatus status) {
-        return bookingRequestService.getAll(status);
+    public PagedResponse<BookingRequestResponse> getAll(
+            @RequestParam(required = false) BookingRequestStatus status,
+            @RequestParam(required = false) String vehicleId,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        return bookingRequestService.getAll(status, vehicleId, pageable);
     }
 
     @GetMapping("/{id}")

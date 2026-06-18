@@ -9,11 +9,16 @@ import com.rently.rently.reservation.payment.PaymentResponse;
 import com.rently.rently.reservation.payment.PaymentService;
 import com.rently.rently.reservation.reservation.hydration.ReservationHydrationContext;
 import com.rently.rently.reservation.reservation.hydration.ReservationHydrator;
+import com.rently.rently.shared.PagedResponse;
+import com.rently.rently.shared.PagedResponseMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -72,6 +77,15 @@ public class ReservationServiceImplementation implements ReservationService {
         return repository.findAll().stream()
                 .map(r -> mapper.toResponse(r, paymentService.findForReservation(r.getId()).orElse(null)))
                 .toList();
+    }
+
+    @Override
+    public PagedResponse<ReservationResponse> getAll(ReservationStatus status, ContractStatus contractStatus, String customerId, String vehicleId, LocalDateTime startDateFrom, LocalDateTime startDateTo, Pageable pageable) {
+        Specification<Reservation> spec = ReservationSpecification.withFilters(status, contractStatus, customerId, vehicleId, startDateFrom, startDateTo);
+        return PagedResponseMapper.toPagedResponse(
+                repository.findAll(spec, pageable),
+                r -> mapper.toResponse(r, paymentService.findForReservation(r.getId()).orElse(null))
+        );
     }
 
     @Override

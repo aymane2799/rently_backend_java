@@ -1249,3 +1249,124 @@ Services are only split when the operation logic genuinely differs between admin
 - **Split service** — different workflow (e.g., `AgencyRegistrationService` handles public submission; admin approval creates an `Agency` + `User` + tenant schema atomically in one `@Transactional` — that is not the same operation).
 
 Catalog write operations (`BrandService`, `ModelService`, `FeatureService`) expose `delete(id)` from `CRUDService`. The admin controller maps this to `POST /{id}/deactivate` (soft-delete per §6.4) — no hard-delete endpoint is exposed.
+
+---
+
+## 10. Pagination, Filtering & Options
+
+### 10.1 Paginated Response Wrapper — `PagedResponse<T>`
+
+All list endpoints return a `PagedResponse<T>` generic record defined in `shared/`:
+
+```java
+public record PagedResponse<T>(
+    List<T> content,
+    int page,
+    int size,
+    long totalElements,
+    int totalPages,
+    boolean first,
+    boolean last
+) {}
+```
+
+JSON shape:
+
+```json
+{
+  "content": [...],
+  "page": 0,
+  "size": 20,
+  "totalElements": 84,
+  "totalPages": 5,
+  "first": true,
+  "last": false
+}
+```
+
+A `PagedResponseMapper` utility converts Spring's `Page<E>` into `PagedResponse<R>` by accepting a mapping function, keeping the mapper logic out of controllers.
+
+### 10.2 Standard Query Parameters
+
+Every paginated list endpoint accepts:
+
+| Parameter | Type | Default | Constraint | Notes |
+|---|---|---|---|---|
+| `page` | `int` | `0` | ≥ 0 | 0-indexed page number |
+| `size` | `int` | `20` | 1–100 | Items per page |
+| `sort` | `string` | `createdAt,desc` | — | `fieldName,direction`; repeatable for multi-sort |
+
+Spring's `PageableHandlerMethodArgumentResolver` parses these natively when the controller declares a `Pageable` parameter.
+
+### 10.3 Specification Pattern for Filtering
+
+Filtering uses Spring Data `JpaSpecificationExecutor<T>`. Each filterable entity has a corresponding `XyzSpecification` class that composes `Predicate` objects dynamically from nullable parameters:
+
+```java
+public class BrandSpecification {
+    public static Specification<Brand> withFilters(Boolean active, String search) {
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (active != null)
+                predicates.add(cb.equal(root.get("isActive"), active));
+            if (search != null && !search.isBlank())
+                predicates.add(cb.like(cb.lower(root.get("name")),
+                    "%" + search.toLowerCase() + "%"));
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+}
+```
+
+Repositories extend both `JpaRepository<T, ID>` and `JpaSpecificationExecutor<T>`:
+
+```java
+public interface BrandRepository
+    extends JpaRepository<Brand, String>, JpaSpecificationExecutor<Brand> {}
+```
+
+### 10.4 Filters per Endpoint
+
+| Endpoint | Filter params | Sortable fields |
+|---|---|---|
+| `GET /admin/agencies` | `status`, `city`, `planId`, `search` | `name`, `city`, `approvedAt`, `createdAt` |
+| `GET /admin/agencies/registrations` | `status`, `city`, `search` | `agencyName`, `city`, `submittedAt`, `reviewedAt` |
+| `GET /admin/subscriptions` | `status`, `agencySlug`, `planId`, `startDateFrom`, `startDateTo` | `startDate`, `endDate`, `amountDue`, `createdAt` |
+| `GET /admin/catalog-requests` | `type`, `status` | `submittedAt`, `reviewedAt`, `type`, `status` |
+| `GET /brands` | `active` (default `true`), `search` | `name`, `createdAt` |
+| `GET /models` | `active` (default `true`), `brandId`, `category`, `search` | `name`, `category`, `createdAt` |
+| `GET /features` | `active` (default `true`), `search` | `name`, `createdAt` |
+| `GET /catalog-requests` | `type`, `status` | `submittedAt`, `type`, `status` |
+| `GET /users` | `role`, `branchId`, `active`, `search` | `firstName`, `lastName`, `role`, `createdAt` |
+| `GET /branches` | `active` (default `true`), `city`, `search` | `name`, `city`, `createdAt` |
+| `GET /branches/{id}/hubs` | `active` (default `true`), `type` | `name`, `type`, `createdAt` |
+| `GET /vehicles` | `status`, `transmission`, `fuelType`, `hubId`, `search` | `licensePlate`, `status`, `mileage`, `dailyBaseRate`, `createdAt` |
+| `GET /customers` | `idType`, `search` | `firstName`, `lastName`, `createdAt` |
+| `GET /reservations` | `status`, `contractStatus`, `customerId`, `vehicleId`, `startDateFrom`, `startDateTo` | `startDate`, `endDate`, `totalAmount`, `createdAt`, `status` |
+| `GET /booking-requests` | `status`, `vehicleId` | `createdAt`, `startDate`, `status` |
+
+### 10.5 Options Endpoints
+
+Dedicated lightweight endpoints that return minimal DTOs — no pagination, always active records only — for select/dropdown inputs in forms.
+
+| Endpoint | Required params | Optional params | Returns |
+|---|---|---|---|
+| `GET /brands/options` | — | — | `List<BrandOptionResponse>` |
+| `GET /models/options` | — | `brandId` | `List<ModelOptionResponse>` |
+| `GET /features/options` | — | — | `List<FeatureOptionResponse>` |
+| `GET /branches/options` | — | — | `List<BranchOptionResponse>` |
+| `GET /hubs/options` | `branchId` | — | `List<HubOptionResponse>` |
+| `GET /customers/options` | `search` (min 2 chars) | — | `List<CustomerOptionResponse>` |
+
+Option DTO shapes (minimal — only what a dropdown label needs):
+
+| Response type | Fields |
+|---|---|
+| `BrandOptionResponse` | `id`, `name` |
+| `ModelOptionResponse` | `id`, `name`, `category` |
+| `FeatureOptionResponse` | `id`, `name`, `icon` |
+| `BranchOptionResponse` | `id`, `name`, `city` |
+| `HubOptionResponse` | `id`, `name`, `type` |
+| `CustomerOptionResponse` | `id`, `firstName`, `lastName`, `idNumber`, `idType` |
+
+`GET /customers/options` enforces a minimum 2-character `search` param and returns a `400` if the param is absent or shorter — preventing a full table scan on large customer lists.

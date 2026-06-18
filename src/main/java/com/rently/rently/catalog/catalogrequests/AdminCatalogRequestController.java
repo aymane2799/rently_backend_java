@@ -1,13 +1,15 @@
 package com.rently.rently.catalog.catalogrequests;
 
 import com.rently.rently.auth.User;
+import com.rently.rently.shared.PagedResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/admin/catalog-requests")
@@ -17,10 +19,13 @@ public class AdminCatalogRequestController {
     private final CatalogRequestService service;
 
     @GetMapping
-    public List<CatalogRequestResponse> getAll(
+    public PagedResponse<CatalogRequestResponse> getAll(
             @RequestParam(required = false) CatalogRequestType type,
-            @RequestParam(required = false) CatalogRequestStatus status) {
-        return service.getAll(type, status);
+            @RequestParam(required = false) CatalogRequestStatus status,
+            @RequestParam(required = false) String agencySlug,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        return service.getAll(type, status, agencySlug, pageable);
     }
 
     @PostMapping("/{id}/approve")

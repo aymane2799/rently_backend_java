@@ -1,9 +1,13 @@
 package com.rently.rently.location.branch;
 
 import com.rently.rently.billing.QuotaService;
+import com.rently.rently.shared.PagedResponse;
+import com.rently.rently.shared.PagedResponseMapper;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,6 +24,19 @@ public class BranchServiceImplementation implements BranchService {
     public List<BranchResponse> getAll() {
         return repository.findAllByIsActive(true).stream()
                 .map(mapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    public PagedResponse<BranchResponse> getAll(Boolean active, String city, String search, Pageable pageable) {
+        Specification<Branch> spec = BranchSpecification.withFilters(active, city, search);
+        return PagedResponseMapper.toPagedResponse(repository.findAll(spec, pageable), mapper::toResponse);
+    }
+
+    @Override
+    public List<BranchOptionResponse> getOptions() {
+        return repository.findAllByIsActive(true).stream()
+                .map(b -> new BranchOptionResponse(b.getId(), b.getName(), b.getCity()))
                 .toList();
     }
 

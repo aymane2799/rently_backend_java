@@ -3,14 +3,16 @@ package com.rently.rently.auth;
 import com.rently.rently.auth.dto.RegisterUserRequest;
 import com.rently.rently.auth.dto.UpdateUserRequest;
 import com.rently.rently.auth.dto.UserResponse;
+import com.rently.rently.shared.PagedResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -21,8 +23,15 @@ public class UserController {
 
     @GetMapping
     @PreAuthorize("hasRole('AGENCY_OWNER')")
-    public List<UserResponse> getAll(@AuthenticationPrincipal User currentUser) {
-        return service.getAll(currentUser.getAgencySlug());
+    public PagedResponse<UserResponse> getAll(
+            @RequestParam(required = false) UserRole role,
+            @RequestParam(required = false) String branchId,
+            @RequestParam(required = false) Boolean active,
+            @RequestParam(required = false) String search,
+            @AuthenticationPrincipal User currentUser,
+            @PageableDefault(size = 20, sort = "firstName", direction = Sort.Direction.ASC) Pageable pageable
+    ) {
+        return service.getAll(currentUser.getAgencySlug(), role, branchId, active, search, pageable);
     }
 
     @PostMapping

@@ -6,9 +6,13 @@ import com.rently.rently.auth.User;
 import com.rently.rently.auth.UserRepository;
 import com.rently.rently.auth.UserRole;
 import com.rently.rently.multitenancy.TenantSchemaProvisioner;
+import com.rently.rently.shared.PagedResponse;
+import com.rently.rently.shared.PagedResponseMapper;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -71,6 +75,12 @@ public class AgencyRegistrationServiceImplementation implements AgencyRegistrati
                 ? registrationRepository.findAllByStatus(status)
                 : registrationRepository.findAll();
         return registrations.stream().map(registrationMapper::toResponse).toList();
+    }
+
+    @Override
+    public PagedResponse<AgencyRegistrationResponse> getAll(AgencyRegistrationStatus status, String city, String search, Pageable pageable) {
+        Specification<AgencyRegistration> spec = AgencyRegistrationSpecification.withFilters(status, city, search);
+        return PagedResponseMapper.toPagedResponse(registrationRepository.findAll(spec, pageable), registrationMapper::toResponse);
     }
 
     @Override

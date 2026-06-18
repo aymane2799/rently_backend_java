@@ -2,6 +2,12 @@ spring:
   application:
     name: KiraDrive
 
+  # Pagination — use 1-based page numbers in requests and responses
+  data:
+    web:
+      pageable:
+        one-indexed-parameters: true
+
   # JPA / Hibernate
   jpa:
     hibernate:

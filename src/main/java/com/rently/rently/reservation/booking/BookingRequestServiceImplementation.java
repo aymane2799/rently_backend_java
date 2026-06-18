@@ -21,9 +21,13 @@ import com.rently.rently.reservation.payment.PaymentRepository;
 import com.rently.rently.reservation.reservation.Reservation;
 import com.rently.rently.reservation.reservation.ReservationRepository;
 import com.rently.rently.reservation.reservation.ReservationStatus;
+import com.rently.rently.shared.PagedResponse;
+import com.rently.rently.shared.PagedResponseMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -228,6 +232,13 @@ public class BookingRequestServiceImplementation implements BookingRequestServic
                 ? bookingRequestRepository.findAllByStatus(status)
                 : bookingRequestRepository.findAll();
         return results.stream().map(mapper::toResponse).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PagedResponse<BookingRequestResponse> getAll(BookingRequestStatus status, String vehicleId, Pageable pageable) {
+        Specification<BookingRequest> spec = BookingRequestSpecification.withFilters(status, vehicleId);
+        return PagedResponseMapper.toPagedResponse(bookingRequestRepository.findAll(spec, pageable), mapper::toResponse);
     }
 
     @Override

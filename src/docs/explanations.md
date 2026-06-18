@@ -1207,4 +1207,28 @@ Insurance expiry dates are already stored on `Vehicle.insuranceExpiresAt`. The c
 
 ---
 
+## 39. Pagination, Filtering & Options — Design Decisions
+
+### Why `PagedResponse<T>` and not Spring's native `Page<T>`
+
+Spring's `Page<T>` serializes to a deeply nested JSON object that exposes Spring internals: `pageable` (with nested `sort`, `offset`, `paged`, `unpaged`), `numberOfElements`, `empty`, and more. This couples the API contract to Spring's internal structure — a Spring upgrade that changes serialization behaviour would silently break clients. A custom `PagedResponse<T>` record exposes exactly what the frontend needs (`content`, `page`, `size`, `totalElements`, `totalPages`, `first`, `last`) and nothing else. The contract is stable regardless of Spring version.
+
+### Why Specifications (JPA Criteria API) and not `@Query` with optional params
+
+`@Query` with optional filter params requires either JPQL `COALESCE`/`OR IS NULL` workarounds (brittle, DB-engine-dependent) or a separate repository method per filter combination (2^N methods for N optional filters). Spring Data `Specification<T>` composes `Predicate` objects dynamically at runtime — one `if (param != null)` block per filter. Adding a new filter is one additional predicate; it does not touch existing logic. Each `Specification` is a pure function of its inputs and is trivially unit-testable in isolation without a Spring context. `JpaSpecificationExecutor<T>` integrates directly with `Pageable`, so sorting, pagination, and filtering are handled by a single `findAll(spec, pageable)` call.
+
+### Why separate `/options` endpoints and not a dual-mode single endpoint
+
+A single endpoint that conditionally returns `PagedResponse<T>` or `List<T>` depending on a query param (e.g. `?paged=false`) produces a response whose shape varies at runtime. The frontend cannot statically type the response without conditional branching on every call site. It also violates the principle that a given URL should have a stable contract. A dedicated `/options` endpoint always returns `List<XyzOptionResponse>`, is trivially typed, and carries a different, smaller DTO — only `id` + display label fields. This keeps the paginated endpoint's contract unambiguous and allows the options endpoint to be independently optimised (e.g., no `COUNT(*)` query, no joins to unneeded relations).
+
+### Why option DTOs are minimal and not the full entity response
+
+The full `BrandResponse` includes `isActive`. The full `ModelResponse` includes the nested `brand` object. A dropdown item needs only `id` + a label string. Returning the full DTO wastes bandwidth on every keystroke in a type-ahead field. Minimal option DTOs (`BrandOptionResponse`, `ModelOptionResponse`, etc.) make the intent explicit and prevent the frontend from accidentally depending on fields that are only meaningful in a table view context.
+
+### Why `/customers/options` requires a minimum 2-character search
+
+A tenant that has been operating for a year may have hundreds or thousands of customer records. Loading all of them into a select on focus would produce a large payload and an unusable dropdown. Requiring at least 2 characters before querying enforces type-ahead semantics: the user types initials or a CIN fragment and receives a short, filtered list. The `400 Bad Request` response when `search` is absent or shorter than 2 characters prevents accidental full-table scans from a frontend bug or a direct API call without the guard.
+
+---
+
 *This document reflects the state of the project as of the initial development phase. Decisions documented here should be revisited as the project scales and requirements evolve.*

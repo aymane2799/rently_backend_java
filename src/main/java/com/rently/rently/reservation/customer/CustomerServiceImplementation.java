@@ -1,9 +1,15 @@
 package com.rently.rently.reservation.customer;
 
+import com.rently.rently.shared.PagedResponse;
+import com.rently.rently.shared.PagedResponseMapper;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -18,6 +24,23 @@ public class CustomerServiceImplementation implements CustomerService {
     public List<CustomerResponse> getAll() {
         return repository.findAll().stream()
                 .map(mapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    public PagedResponse<CustomerResponse> getAll(IdType idType, String search, Pageable pageable) {
+        Specification<Customer> spec = CustomerSpecification.withFilters(idType, search);
+        return PagedResponseMapper.toPagedResponse(repository.findAll(spec, pageable), mapper::toResponse);
+    }
+
+    @Override
+    public List<CustomerOptionResponse> getOptions(String search) {
+        if (search == null || search.trim().length() < 2) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "search must be at least 2 characters");
+        }
+        Specification<Customer> spec = CustomerSpecification.withFilters(null, search);
+        return repository.findAll(spec).stream()
+                .map(c -> new CustomerOptionResponse(c.getId(), c.getFirstName(), c.getLastName(), c.getPhone(), c.getIdType(), c.getIdNumber()))
                 .toList();
     }
 

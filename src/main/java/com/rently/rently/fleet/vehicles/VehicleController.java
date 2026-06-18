@@ -1,11 +1,13 @@
 package com.rently.rently.fleet.vehicles;
 
+import com.rently.rently.shared.PagedResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/vehicles")
@@ -14,8 +16,15 @@ public class VehicleController {
     private final VehicleService service;
 
     @GetMapping
-    public List<VehicleResponse> getAll() {
-        return service.getAll();
+    public PagedResponse<VehicleResponse> getAll(
+            @RequestParam(required = false) VehicleStatus status,
+            @RequestParam(required = false) Transmission transmission,
+            @RequestParam(required = false) FuelType fuelType,
+            @RequestParam(required = false) String currentHubId,
+            @RequestParam(required = false) String search,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        return service.getAll(status, transmission, fuelType, currentHubId, search, pageable);
     }
 
     @GetMapping("{id}")
